@@ -2,7 +2,6 @@ package vn.wellcare4u.services.impl;
 
 import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userFactory.createUser(ERole.valueOf(req.getRole()));
         user.setFirstName(req.getFirstName());
         user.setLastName(req.getLastName());
-
+        user.setAvatar("https://res.cloudinary.com/dlueiywku/image/upload/v1772988330/user_jzkljv.png");
         user.setAccount(acc);
         acc.setUser(user);
 
@@ -95,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtUtil.generateAccessToken(acc);
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(acc);
-
+        
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())

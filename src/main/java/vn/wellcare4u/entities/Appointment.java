@@ -19,6 +19,7 @@ import vn.wellcare4u.entities.doctor.Doctor;
 import vn.wellcare4u.entities.doctor.TimeSlot;
 import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.EAppointmentType;
+import vn.wellcare4u.enums.ECancelBy;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -51,4 +52,14 @@ public class Appointment {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    @Enumerated(EnumType.STRING)
+    private ECancelBy cancelBy;
+
+    @Column(length = 2000)
+    private String cancelReason;
+
+    private LocalDateTime cancelledAt;
+    
+    private Boolean checkedIn = false;
 }

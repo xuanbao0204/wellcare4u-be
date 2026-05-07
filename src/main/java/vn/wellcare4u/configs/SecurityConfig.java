@@ -44,7 +44,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         
                         .requestMatchers("/api/v1/account/**").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
+                        .requestMatchers("/api/v1/user/**").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         
+                        .requestMatchers("/api/v1/medical-records/**").hasAnyRole("PATIENT", "DOCTOR")
+                        
+                        .requestMatchers("/api/v1/doctor/schedules/**").hasAnyRole("PATIENT", "DOCTOR")
+
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);

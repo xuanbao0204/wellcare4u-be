@@ -1,4 +1,4 @@
-package vn.wellcare4u.entities;
+package vn.wellcare4u.entities.medical;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

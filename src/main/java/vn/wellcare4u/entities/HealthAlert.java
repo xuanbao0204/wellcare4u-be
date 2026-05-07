@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.wellcare4u.entities.medical.VitalSign;
 
 @AllArgsConstructor
 @NoArgsConstructor

@@ -9,8 +9,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,24 +23,30 @@ import vn.wellcare4u.enums.ETimeSlotStatus;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "time_slot")
+@Table(name = "time_slot", uniqueConstraints = {
+		@UniqueConstraint(columnNames = { "doctor_id", "date", "startTime" }) })
 public class TimeSlot {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne
+	@ManyToOne(optional = false)
+    @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 
     @ManyToOne
+    @JoinColumn(name = "schedule_id")
     private DoctorSchedule schedule;
 
-    private LocalDate date;
+	private LocalDate date;
 
-    private LocalTime startTime;
-    private LocalTime endTime;
+	private LocalTime startTime;
+	private LocalTime endTime;
 
-    @Enumerated(EnumType.STRING)
-    private ETimeSlotStatus status;
+	@Enumerated(EnumType.STRING)
+	private ETimeSlotStatus status;
+	
+	@Version
+    private Long version;
 }

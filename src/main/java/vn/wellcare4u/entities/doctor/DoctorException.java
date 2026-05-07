@@ -1,13 +1,15 @@
-package vn.wellcare4u.entities;
+package vn.wellcare4u.entities.doctor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,23 +18,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "vital_sign")
-public class VitalSign {
+@Table(name = "doctor_exception", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"doctor_id", "date"})
+})
+public class DoctorException {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Patient patient;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "doctor_id")
+    private Doctor doctor;
 
-    private Double height;
-    private Double weight;
-    private Double bmi;
+    private LocalDate date;
 
-    private String bloodPressure;
-    private Integer heartRate;
-    private Double bloodSugar;
-
-    private LocalDateTime timestamp;
+    private String reason;
 }

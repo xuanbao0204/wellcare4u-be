@@ -1,10 +1,9 @@
 package vn.wellcare4u.configs;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,57 +15,104 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import vn.wellcare4u.entities.Account;
-import vn.wellcare4u.repositories.AccountRepository;
 import vn.wellcare4u.utils.JwtUtil;
 
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtService;
+	private final JwtUtil jwtService;
 
-    private final UserDetailsService userDetailsService;
+	private final UserDetailsService userDetailsService;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-        String token = null;
+		String path = request.getRequestURI();
 
-        if (request.getCookies() != null) {
-            for (var cookie : request.getCookies()) {
-                if ("accessToken".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
-        }
+		if (path.startsWith("/ws") || path.contains("sockjs")) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+		String token = null;
 
-        if (!jwtService.validate(token)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+		if (request.getCookies() != null) {
+			for (var cookie : request.getCookies()) {
+				if ("accessToken".equals(cookie.getName())) {
+					token = cookie.getValue();
+					break;
+				}
+			}
+		}
 
-        String email = jwtService.extractEmail(token);
+		if (token != null && jwtService.validate(token)) {
+			try {
+				String email = jwtService.extractEmail(token);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+				UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+				UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,
+						userDetails.getAuthorities());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+				SecurityContextHolder.getContext().setAuthentication(auth);
 
-        filterChain.doFilter(request, response);
-    }
+			} catch (Exception ignored) {
+				SecurityContextHolder.clearContext();
+			}
+		}
+
+		filterChain.doFilter(request, response);
+	}
+
+//	@Override
+//	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+//			throws ServletException, IOException {
+//
+//		String token = null;
+//
+//		if (request.getCookies() != null) {
+//			for (var cookie : request.getCookies()) {
+//				if ("accessToken".equals(cookie.getName())) {
+//					token = cookie.getValue();
+//					break;
+//				}
+//			}
+//		}
+//
+//		if (token == null) {
+//			filterChain.doFilter(request, response);
+//			return;
+//		}
+//
+//        if (!jwtService.validate(token)) {
+//        	response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            response.getWriter().write("Invalid or expired token");
+//            return;
+//        }
+//
+//        try {
+//            String email = jwtService.extractEmail(token);
+//
+//            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+//
+//            UsernamePasswordAuthenticationToken authentication =
+//                    new UsernamePasswordAuthenticationToken(
+//                            userDetails,
+//                            null,
+//                            userDetails.getAuthorities()
+//                    );
+//
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//            
+//
+//        } catch (Exception e) {
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            response.getWriter().write("Token expired or invalid");
+//            return;
+//        }
+//
+//		filterChain.doFilter(request, response);
+//	}
 }

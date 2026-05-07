@@ -26,7 +26,7 @@ public class DoctorSchedule {
     @ManyToOne
     private Doctor doctor;
 
-    private Integer dayOfWeek; // 1-7
+    private Integer dayOfWeek;
 
     private LocalTime startTime;
     private LocalTime endTime;

@@ -1,6 +1,5 @@
 package vn.wellcare4u.entities;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -8,43 +7,42 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.wellcare4u.entities.doctor.Doctor;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Entity
-@Table(name = "medical_record")
-public class MedicalRecord {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Entity
+@Table(name = "forum_comment")
+public class ForumComment {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    private Appointment appointment;
+    @Column(length = 3000)
+    private String content;
 
     @ManyToOne
-    private Patient patient;
+    private ForumPost post;
 
     @ManyToOne
-    private Doctor doctor;
+    private User author;
 
-    @Column(length = 2000)
-    private String diagnosis;
+    @ManyToOne
+    @JoinColumn(name = "parent_comment_id")
+    private ForumComment parentComment;
 
-    private String icdCode;
-
-    @Column(length = 2000)
-    private String treatmentPlan;
-
-    private LocalDate followUpDate;
-
+    private boolean isExpertReply;
     private LocalDateTime createdAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

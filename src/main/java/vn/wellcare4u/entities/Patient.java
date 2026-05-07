@@ -21,4 +21,5 @@ public class Patient extends User {
 	private String emergencyContact;
     private String bloodType;
     private String insuranceNumber;
+    private String insuranceImage;
 }

@@ -2,15 +2,20 @@ package vn.wellcare4u.entities.doctor;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import vn.wellcare4u.entities.User;
+import vn.wellcare4u.enums.ESpecialization;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "doctor")
 public class Doctor extends User {
@@ -24,7 +29,8 @@ public class Doctor extends User {
     private String bio;
 
     private String certification;
-    private String specialization;
+    @Enumerated(EnumType.STRING)
+    private ESpecialization specialization;
     private Integer experienceYears;
     private Double consultationFee;
     private String clinicAddress;

@@ -126,10 +126,10 @@ public class AuthAPI {
     private ResponseCookie buildAccessCookie(String token) {
         return ResponseCookie.from("accessToken", token)
                 .httpOnly(true)
-                .secure(true)
+                .secure(true) //ddooir veef true khi production https
                 .path("/")
                 .sameSite("Strict")
-                .maxAge(Duration.ofMinutes(15))
+                .maxAge(Duration.ofMinutes(30))
                 .build();
     }
 
