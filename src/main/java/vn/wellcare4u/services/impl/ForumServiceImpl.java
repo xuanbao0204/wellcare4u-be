@@ -17,6 +17,7 @@ import vn.wellcare4u.entities.ForumPost;
 import vn.wellcare4u.entities.User;
 import vn.wellcare4u.entities.doctor.Doctor;
 import vn.wellcare4u.enums.EPostSortType;
+import vn.wellcare4u.enums.EPostStatus;
 import vn.wellcare4u.enums.ERole;
 import vn.wellcare4u.enums.ESpecialization;
 import vn.wellcare4u.exception.AppException;
@@ -58,6 +59,7 @@ public class ForumServiceImpl implements ForumService {
 	     post.setViewCount(0);
 	     post.setLikes(0);
 	     post.setVerifiedAnswer(false);
+	     post.setStatus(EPostStatus.PUBLIC);
 	
 	     return mapper.toDetail(postRepo.save(post));
 	 }

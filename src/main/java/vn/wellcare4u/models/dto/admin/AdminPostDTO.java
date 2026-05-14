@@ -1,26 +1,29 @@
-package vn.wellcare4u.models.dto.forum;
+package vn.wellcare4u.models.dto.admin;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import vn.wellcare4u.enums.ESpecialization;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
-public class PostSummaryDTO {
+@NoArgsConstructor
+@AllArgsConstructor
+public class AdminPostDTO {
+
     private Long id;
     private String title;
     private String contentPreview;
-    private ESpecialization category;
-    private AuthorDTO author;
+    private String category;
+    private String authorName;
+    private String authorEmail;
     private boolean isAnonymous;
     private boolean isVerifiedAnswer;
     private int viewCount;
     private long likes;
     private int commentCount;
     private List<String> tags;
-    private LocalDateTime createdAt;
-    private String status;
+    private String createdAt;
 }

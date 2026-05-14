@@ -48,6 +48,15 @@ public class DoctorServiceImpl implements DoctorService{
 
 	}
 	
+	@Override
+	public DoctorDTO findDoctorById(Long doctorId) {
+		Doctor doctor = doctorRepo.findById(doctorId).orElseThrow(() -> new AppException(
+                "Doctor not found",
+                "DOCTOR_NOT_FOUND",
+                HttpStatus.NOT_FOUND
+        ));
+		return convertToFullDTO(doctor);
+	}
 	
 	
 	@Override

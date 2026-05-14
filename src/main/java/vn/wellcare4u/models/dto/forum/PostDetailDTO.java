@@ -22,4 +22,5 @@ public class PostDetailDTO {
     private List<String> tags;
     private List<CommentDTO> comments;
     private LocalDateTime createdAt;
+    private String status;
 }

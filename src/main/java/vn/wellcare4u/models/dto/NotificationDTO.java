@@ -10,6 +10,7 @@ import vn.wellcare4u.enums.ENotificationType;
 @Builder
 
 public class NotificationDTO {
+	private Long id;
 	private Long recipientId;
 	private Long notificationId;
 	private String title;

@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import vn.wellcare4u.models.ApiResponse;
 import vn.wellcare4u.models.request.LoginRequest;
+import vn.wellcare4u.models.request.OtpRequest;
 import vn.wellcare4u.models.request.RegisterRequest;
 import vn.wellcare4u.services.AuthService;
 import vn.wellcare4u.services.UserService;
@@ -47,7 +49,7 @@ public class AuthAPI {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
 
         authService.register(request);
 
@@ -59,6 +61,33 @@ public class AuthAPI {
         );
     }
 
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody OtpRequest request) {
+ 
+        authService.verifyOtp(request.getEmail(), request.getCode());
+ 
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .status(200)
+                        .message("Xác thực thành công! Tài khoản của bạn đã được kích hoạt.")
+                        .build()
+        );
+    }
+ 
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestBody OtpRequest request) {
+ 
+        authService.resendOtp(request.getEmail());
+ 
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .status(200)
+                        .message("Mã OTP mới đã được gửi đến email của bạn.")
+                        .build()
+        );
+    }
+    
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,

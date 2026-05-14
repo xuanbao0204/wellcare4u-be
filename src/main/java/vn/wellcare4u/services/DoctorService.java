@@ -19,4 +19,6 @@ public interface DoctorService {
 
 	Page<DoctorDTO> findAllDoctorPage(Pageable pageable, DoctorListRequest req);
 
+	DoctorDTO findDoctorById(Long doctorId);
+
 }

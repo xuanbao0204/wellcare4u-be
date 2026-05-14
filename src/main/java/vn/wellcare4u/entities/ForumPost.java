@@ -21,6 +21,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.wellcare4u.enums.EPostStatus;
 import vn.wellcare4u.enums.ESpecialization;
 
 @AllArgsConstructor
@@ -60,6 +61,9 @@ public class ForumPost {
     @CollectionTable(name = "forum_post_tags", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "tag")
     private List<String> tags;
+    
+    @Enumerated(EnumType.STRING)
+    private EPostStatus status;
     
     @PrePersist
     protected void onCreate() {

@@ -118,6 +118,7 @@ public class NotificationServiceImpl implements NotificationService {
     private NotificationDTO mapToDTO(NotificationRecipient r) {
         Notification n = r.getNotification();
         return NotificationDTO.builder()
+        		.id(r.getId())
                 .recipientId(r.getId())
                 .notificationId(n.getId())
                 .title(n.getTitle())

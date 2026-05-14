@@ -31,6 +31,7 @@ public class ForumMapper {
          .commentCount(post.getComments() != null ? post.getComments().size() : 0)
          .tags(post.getTags())
          .createdAt(post.getCreatedAt())
+         .status(post.getStatus().getValue())
          .build();
  }
 
@@ -53,6 +54,7 @@ public class ForumMapper {
          .tags(post.getTags())
          .comments(topLevel)
          .createdAt(post.getCreatedAt())
+         .status(post.getStatus().getValue())
          .build();
  }
 

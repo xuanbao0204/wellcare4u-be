@@ -54,6 +54,17 @@ public class ListingAPI {
 				.build();
 	}
 	
+	@GetMapping("/doctor/{doctorId}")
+	public ApiResponse<DoctorDTO> getDoctorDetail(@PathVariable Long doctorId) {
+
+        
+		return ApiResponse.<DoctorDTO>builder()
+				.status(HttpStatus.OK.value())
+				.message("Lấy sanh sách thành công")
+				.data(doctorServ.findDoctorById(doctorId))
+				.build();
+	}
+	
 	@Autowired
 	private TimeSlotService timeslotServ;
 	
@@ -70,5 +81,7 @@ public class ListingAPI {
 	            .data(slots)
 	            .build();
 	}
+	
+	
 }
 

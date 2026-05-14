@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/medical-records/**").hasAnyRole("PATIENT", "DOCTOR")
                         
                         .requestMatchers("/api/v1/doctor/schedules/**").hasAnyRole("PATIENT", "DOCTOR")
+                        
+                        .requestMatchers("/api/v1/list/doctors/**").permitAll()
 
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
