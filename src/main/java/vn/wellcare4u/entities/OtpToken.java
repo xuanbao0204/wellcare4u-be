@@ -2,6 +2,7 @@ package vn.wellcare4u.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import vn.wellcare4u.enums.EOTPType;
 
 import java.time.LocalDateTime;
 
@@ -32,4 +33,8 @@ public class OtpToken {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+    
+    @Column
+    @Enumerated(EnumType.STRING)
+    private EOTPType type;
 }

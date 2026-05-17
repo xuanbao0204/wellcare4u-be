@@ -1,5 +1,9 @@
 package vn.wellcare4u.enums;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public enum ESpecialization {
 	TIM_MACH("Tim mạch"),
     DA_LIEU("Da liễu"),
@@ -43,5 +47,11 @@ public enum ESpecialization {
 
     public String getDisplayName() {
         return displayName;
+    }
+    
+    public static String toPromptString() {
+    	return Arrays.stream(ESpecialization.values())
+    			.map(Enum::name)
+    			.collect(Collectors.joining(", "));
     }
 }

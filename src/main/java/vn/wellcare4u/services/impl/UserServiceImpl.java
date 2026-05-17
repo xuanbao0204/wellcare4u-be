@@ -32,6 +32,7 @@ public class UserServiceImpl implements UserService{
 		dto.setAvatar(user.getAvatar());
 		dto.setGender(user.getGender());
 		dto.setRole(user.getAccount().getRole().name());
+		dto.setStatus(user.getAccount().getStatus().name());
 		return dto;
 	}
 

@@ -14,8 +14,4 @@ public interface AuthService {
 
 	void logout(String email);
 
-	void resendOtp(String email);
-
-	void verifyOtp(String email, String code);
-
 }
