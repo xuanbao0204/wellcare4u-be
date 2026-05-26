@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/otp/**").permitAll()
+                        .requestMatchers("/api/v1/account/reset-password").permitAll()
                         
                         .requestMatchers("/api/v1/account/**").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/api/v1/user/**").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")

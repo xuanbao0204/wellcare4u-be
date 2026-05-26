@@ -2,12 +2,16 @@ package vn.wellcare4u.models.dto;
 
 import java.time.LocalDateTime;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.EAppointmentType;
 import vn.wellcare4u.enums.ECancelBy;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Builder
 public class AppointmentDTO {

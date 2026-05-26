@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.wellcare4u.models.dto.DashboardTrendPointDTO;
 
 import java.util.List;
 
@@ -40,6 +41,8 @@ public class DashboardStatsDTO {
 
     // Thông báo mới nhất
     private List<RecentNotificationDTO> recentNotifications;
+    
+//    private List<DashboardTrendPointDTO> trends;
 
     @Data
     @Builder

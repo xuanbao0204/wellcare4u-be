@@ -10,10 +10,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.wellcare4u.entities.Appointment;
 import vn.wellcare4u.entities.Patient;
@@ -26,6 +28,7 @@ import vn.wellcare4u.entities.medical.VitalSign;
 import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.ENotificationType;
 import vn.wellcare4u.enums.ERecordStatus;
+import vn.wellcare4u.events.DashboardChangedEvent;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.models.dto.AppointmentDTO;
 import vn.wellcare4u.models.dto.MedicalRecordDTO;
@@ -50,6 +53,7 @@ import vn.wellcare4u.services.NotificationService;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MedicalRecordServiceImpl implements MedicalRecordService {
 
 	@Autowired
@@ -71,6 +75,8 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
 	
 	@Autowired
 	private VitalSignRepository vitalSignRepo;
+	
+	private final ApplicationEventPublisher publisher;
 
 	@Override
 	public Long startExam(Long appointmentId, Long doctorId) {
@@ -246,7 +252,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     	            .build())
     	        .toList();
     	}
-
+    
 	@Override
 	@Transactional
 	public void finalizeRecord(CreateRecordRequest req, Long doctorId) {
@@ -343,6 +349,12 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
 		appointment.setStatus(EAppointmentStatus.COMPLETED);
 		recordRepo.save(record);
 		appointmentRepo.save(appointment);
+		
+		publisher.publishEvent(
+                new DashboardChangedEvent(
+                        record.getPatient().getId()
+                )
+        );
 		
 		notiServ.send(
 		        NotificationRequest.toUsers(

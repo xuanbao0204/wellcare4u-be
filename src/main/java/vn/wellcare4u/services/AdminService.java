@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.wellcare4u.models.dto.admin.AdminAccountDTO;
 import vn.wellcare4u.models.dto.admin.AdminPostDTO;
 import vn.wellcare4u.models.dto.admin.DashboardStatsDTO;
+import vn.wellcare4u.models.response.TrendsResponseDTO;
 
 public interface AdminService {
 
@@ -24,5 +25,7 @@ public interface AdminService {
 	Page<AdminAccountDTO> getAccounts(String role, String status, String keyword, int page, int size);
 
 	DashboardStatsDTO getDashboardStats();
+
+	TrendsResponseDTO getTrends(String period, int offset);
 
 }

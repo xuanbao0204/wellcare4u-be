@@ -44,4 +44,8 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
 	        "patient"
 	})
 	Optional<MedicalRecord> findDetailById(Long id);
+	
+	List<MedicalRecord> findByPatientIdOrderByCreatedAtDesc(Long patientId);
+	
+	Long countByDoctorId(Long doctorId);
 }

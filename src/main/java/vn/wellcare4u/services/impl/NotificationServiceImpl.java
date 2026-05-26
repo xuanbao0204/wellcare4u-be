@@ -115,7 +115,8 @@ public class NotificationServiceImpl implements NotificationService {
             .orElseThrow(() -> new RuntimeException("User not found: " + email));
     }
 
-    private NotificationDTO mapToDTO(NotificationRecipient r) {
+    @Override
+	public NotificationDTO mapToDTO(NotificationRecipient r) {
         Notification n = r.getNotification();
         return NotificationDTO.builder()
         		.id(r.getId())

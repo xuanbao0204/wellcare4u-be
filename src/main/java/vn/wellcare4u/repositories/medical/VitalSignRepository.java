@@ -35,4 +35,6 @@ public interface VitalSignRepository extends JpaRepository<VitalSign, Long> {
 			    ORDER BY v.patient.id ASC, v.timestamp DESC
 			""")
 	List<VitalSign> findByPatientIdInOrderByTimestampDesc(@Param("patientId")Long patientId);
+	
+	List<VitalSign> findTop5ByPatientIdOrderByTimestampDesc(Long patientId);
 }

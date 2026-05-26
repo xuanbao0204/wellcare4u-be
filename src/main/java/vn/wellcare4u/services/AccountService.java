@@ -14,12 +14,12 @@ public interface AccountService {
 
 	String getAccountStatus(String email);
 
-	void forgotPassword(String email);
-
 	void changePassword(String currentPassword, String newPassword, String email);
 
 	void deleteAccount(String email, String password);
 
 	void deactivateAccount(String email);
+
+	void resetPassword(String email, String newPassword);
 
 }

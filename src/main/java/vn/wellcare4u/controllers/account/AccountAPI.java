@@ -13,6 +13,7 @@ import vn.wellcare4u.models.ApiResponse;
 import vn.wellcare4u.models.request.ChangePasswordRequest;
 import vn.wellcare4u.models.request.DeleteAccountRequest;
 import vn.wellcare4u.models.request.EmailAccountRequest;
+import vn.wellcare4u.models.request.ResetPasswordRequest;
 import vn.wellcare4u.services.AccountService;
 
 @RestController
@@ -100,5 +101,12 @@ public class AccountAPI {
 	            .status(200)
 	            .message("Xóa tài khoản thành công")
 	            .build();
+	}
+	
+	@PutMapping("/reset-password")
+	public ApiResponse<Void> resetAccount(@RequestBody ResetPasswordRequest req) {
+
+		accServ.resetPassword(req.getEmail(), req.getPassword());
+		return ApiResponse.<Void>builder().status(200).message("Đổi mật khẩu thành công").build();
 	}
 }

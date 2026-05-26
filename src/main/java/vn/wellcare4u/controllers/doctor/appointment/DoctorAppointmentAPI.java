@@ -74,7 +74,7 @@ public class DoctorAppointmentAPI {
 		
 		return ApiResponse.<Void>builder()
 				.status(200)
-				.message("Hủy thành công")
+				.message("Cập nhật thành công")
 				.build();
 	}
 	

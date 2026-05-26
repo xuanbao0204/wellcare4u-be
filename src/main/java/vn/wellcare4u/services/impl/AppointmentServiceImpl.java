@@ -142,63 +142,6 @@ public class AppointmentServiceImpl implements AppointmentService {
 		    );
 	}
 
-//	@Override
-//	public void cancelAppointment(Long patientId, Long appointmentId) {
-//		Appointment apt = appointmentRepo.findById(appointmentId).orElseThrow(
-//				() -> new AppException("Appointment không hợp lệ", "APPOINTMENT_NOT_FOUND", HttpStatus.BAD_REQUEST));
-//		if (patientId != apt.getPatient().getId()) {
-//			throw new AppException("Appointment không hợp lệ", "APPOINTMENT_NOT_FOUND", HttpStatus.BAD_REQUEST);
-//		}
-//
-//		LocalDateTime appointmentDateTime = apt.getTimeSlot().getDate().atTime(apt.getTimeSlot().getStartTime());
-//		LocalDateTime now = LocalDateTime.now();
-//
-//		LocalDateTime deadline = appointmentDateTime.minusHours(24);
-//
-//		if (now.isAfter(deadline)) {
-//			throw new AppException("Đã quá hạn hủy đặt lịch", "CANCEL_TIME_EXPIRED", HttpStatus.BAD_REQUEST);
-//		}
-//
-//		apt.setStatus(EAppointmentStatus.CANCELLED);
-//		apt.setUpdatedAt(now);
-//
-//		appointmentRepo.save(apt);
-//
-//		TimeSlot slot = apt.getTimeSlot();
-//		slot.setStatus(ETimeSlotStatus.AVAILABLE);
-//		timeSlotRepo.save(slot);
-//	}
-//
-//	@Override
-//	public void cancelAppointmentDoctor(Long doctor, Long appointmentId) {
-//		Appointment apt = appointmentRepo.findById(appointmentId).orElseThrow(
-//				() -> new AppException("Appointment không hợp lệ", "APPOINTMENT_NOT_FOUND", HttpStatus.BAD_REQUEST));
-//		if (doctor != apt.getDoctor().getId()) {
-//			throw new AppException("Appointment không hợp lệ", "APPOINTMENT_NOT_FOUND", HttpStatus.BAD_REQUEST);
-//		}
-//
-//		LocalDateTime appointmentDateTime = apt.getTimeSlot().getDate().atTime(apt.getTimeSlot().getStartTime());
-//		LocalDateTime now = LocalDateTime.now();
-//
-//		LocalDateTime deadline = appointmentDateTime.minusHours(24);
-//
-//		if (apt.getStatus() == EAppointmentStatus.CONFIRMED)
-//			throw new AppException("Không thể hủy vì đã confirm", "NO_CANCEL_BOOKED_SLOT", HttpStatus.BAD_REQUEST);
-//
-//		if (now.isAfter(deadline)) {
-//			throw new AppException("Đã quá hạn hủy đặt lịch", "CANCEL_TIME_EXPIRED", HttpStatus.BAD_REQUEST);
-//		}
-//
-//		apt.setStatus(EAppointmentStatus.CANCELLED);
-//		apt.setUpdatedAt(now);
-//
-//		appointmentRepo.save(apt);
-//
-//		TimeSlot slot = apt.getTimeSlot();
-//		slot.setStatus(ETimeSlotStatus.BLOCKED);
-//		timeSlotRepo.save(slot);
-//	}
-
 	@Override
 	@Transactional
 	public AppointmentDTO bookSlot(AppointmentRequest req, Long patientId) {

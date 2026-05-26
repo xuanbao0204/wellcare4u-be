@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import vn.wellcare4u.models.dto.doctor.DoctorDTO;
+import vn.wellcare4u.models.dto.doctor.DoctorDashboardSnapshotDTO;
 import vn.wellcare4u.models.request.DoctorListRequest;
 import vn.wellcare4u.models.request.DoctorProfileRequest;
 
@@ -20,5 +21,7 @@ public interface DoctorService {
 	Page<DoctorDTO> findAllDoctorPage(Pageable pageable, DoctorListRequest req);
 
 	DoctorDTO findDoctorById(Long doctorId);
+
+	DoctorDashboardSnapshotDTO getDashboard(String email);
 
 }

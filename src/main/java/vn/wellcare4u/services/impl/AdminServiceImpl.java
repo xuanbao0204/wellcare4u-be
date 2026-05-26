@@ -16,12 +16,15 @@ import vn.wellcare4u.entities.Notification;
 import vn.wellcare4u.entities.User;
 import vn.wellcare4u.entities.doctor.Doctor;
 import vn.wellcare4u.enums.EAccountStatus;
+import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.ERole;
 import vn.wellcare4u.enums.ESpecialization;
 import vn.wellcare4u.exception.AppException;
+import vn.wellcare4u.models.dto.DashboardTrendPointDTO;
 import vn.wellcare4u.models.dto.admin.AdminAccountDTO;
 import vn.wellcare4u.models.dto.admin.AdminPostDTO;
 import vn.wellcare4u.models.dto.admin.DashboardStatsDTO;
+import vn.wellcare4u.models.response.TrendsResponseDTO;
 import vn.wellcare4u.repositories.AccountRepository;
 import vn.wellcare4u.repositories.AppointmentRepository;
 import vn.wellcare4u.repositories.DoctorRepository;
@@ -32,9 +35,16 @@ import vn.wellcare4u.services.AdminService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,65 +63,236 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public DashboardStatsDTO getDashboardStats() {
-        List<Account> allAccounts = accountRepository.findAll();
 
-        long totalAccounts = allAccounts.size();
-        long totalPatients = allAccounts.stream().filter(a -> a.getRole() == ERole.PATIENT).count();
-        long totalDoctors = allAccounts.stream().filter(a -> a.getRole() == ERole.DOCTOR).count();
-        long totalAdmins = allAccounts.stream().filter(a -> a.getRole() == ERole.ADMIN).count();
+        long totalAccounts = accountRepository.count();
 
-        long activeAccounts = allAccounts.stream().filter(a -> a.getStatus() == EAccountStatus.ACTIVE).count();
-        long inactiveAccounts = allAccounts.stream().filter(a -> a.getStatus() == EAccountStatus.INACTIVE).count();
-        long lockedAccounts = allAccounts.stream().filter(a -> a.getStatus() == EAccountStatus.LOCKED).count();
+        long totalPatients = accountRepository.countByRole(ERole.PATIENT);
+        long totalDoctors = accountRepository.countByRole(ERole.DOCTOR);
+        long totalAdmins = accountRepository.countByRole(ERole.ADMIN);
 
-        List<Doctor> doctors = doctorRepository.findAll();
-        long verifiedDoctors = doctors.stream().filter(Doctor::isVerified).count();
-        long pendingVerificationDoctors = doctors.stream().filter(d -> !d.isVerified()).count();
+        long activeAccounts = accountRepository.countByStatus(EAccountStatus.ACTIVE);
+        long inactiveAccounts = accountRepository.countByStatus(EAccountStatus.INACTIVE);
+        long lockedAccounts = accountRepository.countByStatus(EAccountStatus.LOCKED);
 
-        List<Appointment> appointments = appointmentRepository.findAll();
-        long totalAppointments = appointments.size();
-        long pendingAppointments = appointments.stream()
-                .filter(a -> a.getStatus().name().equals("PENDING")).count();
-        long completedAppointments = appointments.stream()
-                .filter(a -> a.getStatus().name().equals("COMPLETED")).count();
-        long cancelledAppointments = appointments.stream()
-                .filter(a -> a.getStatus().name().equals("CANCELLED")).count();
+        long verifiedDoctors = doctorRepository.countByVerifiedTrue();
+        long pendingVerificationDoctors = doctorRepository.countByVerifiedFalse();
+
+        long totalAppointments = appointmentRepository.count();
+
+        long pendingAppointments =
+                appointmentRepository.countByStatus(EAppointmentStatus.PENDING);
+
+        long completedAppointments =
+                appointmentRepository.countByStatus(EAppointmentStatus.COMPLETED);
+
+        long cancelledAppointments =
+                appointmentRepository.countByStatus(EAppointmentStatus.CANCELLED);
 
         long totalPosts = forumPostRepository.count();
         long totalComments = forumCommentRepository.count();
 
-        // Recent notifications
-        List<Notification> notifications = notificationRepository.findAll(
-                PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent();
+        List<Notification> notifications =
+                notificationRepository.findAll(
+                        PageRequest.of(
+                                0,
+                                5,
+                                Sort.by(Sort.Direction.DESC, "createdAt")
+                        )
+                ).getContent();
 
-        List<DashboardStatsDTO.RecentNotificationDTO> recentNotifications = notifications.stream()
-                .map(n -> DashboardStatsDTO.RecentNotificationDTO.builder()
-                        .id(n.getId())
-                        .title(n.getTitle())
-                        .content(n.getContent())
-                        .type(n.getType().name())
-                        .createdAt(n.getCreatedAt() != null ? n.getCreatedAt().format(FMT) : "")
-                        .build())
-                .collect(Collectors.toList());
+        List<DashboardStatsDTO.RecentNotificationDTO> recentNotifications =
+                notifications.stream()
+                        .map(n -> DashboardStatsDTO.RecentNotificationDTO.builder()
+                                .id(n.getId())
+                                .title(n.getTitle())
+                                .content(n.getContent())
+                                .type(n.getType().name())
+                                .createdAt(
+                                        n.getCreatedAt() != null
+                                                ? n.getCreatedAt().format(FMT)
+                                                : ""
+                                )
+                                .build())
+                        .toList();
+        
+        LocalDateTime from = LocalDate.now()
+                .minusDays(6)
+                .atStartOfDay();
+
+        List<Object[]> accountStats =
+                accountRepository.countAccountsGroupedByDate(from);
+
+        List<Object[]> appointmentStats =
+                appointmentRepository.countAppointmentsGroupedByDate(from);
+
+        Map<String, Long> accountMap = new HashMap<>();
+        Map<String, Long> appointmentMap = new HashMap<>();
+
+        for (Object[] row : accountStats) {
+            accountMap.put(
+                    row[0].toString(),
+                    ((Number) row[1]).longValue()
+            );
+        }
+
+        for (Object[] row : appointmentStats) {
+            appointmentMap.put(
+                    row[0].toString(),
+                    ((Number) row[1]).longValue()
+            );
+        }
+
+//        List<DashboardTrendPointDTO> trends = new ArrayList<>();
+//
+//        for (int i = 6; i >= 0; i--) {
+//
+//            LocalDate date = LocalDate.now().minusDays(i);
+//
+//            String key = date.toString();
+//
+//            trends.add(
+//                    DashboardTrendPointDTO.builder()
+//                            .label(date.format(DateTimeFormatter.ofPattern("dd/MM")))
+//                            .users(accountMap.getOrDefault(key, 0L))
+//                            .appointments(
+//                                    appointmentMap.getOrDefault(key, 0L)
+//                            )
+//                            .build()
+//            );
+//        }
 
         return DashboardStatsDTO.builder()
                 .totalAccounts(totalAccounts)
                 .totalPatients(totalPatients)
                 .totalDoctors(totalDoctors)
                 .totalAdmins(totalAdmins)
+
                 .activeAccounts(activeAccounts)
                 .inactiveAccounts(inactiveAccounts)
                 .lockedAccounts(lockedAccounts)
+
                 .verifiedDoctors(verifiedDoctors)
                 .pendingVerificationDoctors(pendingVerificationDoctors)
+
                 .totalAppointments(totalAppointments)
                 .pendingAppointments(pendingAppointments)
                 .completedAppointments(completedAppointments)
                 .cancelledAppointments(cancelledAppointments)
+
                 .totalPosts(totalPosts)
                 .totalComments(totalComments)
+
                 .recentNotifications(recentNotifications)
+//                .trends(trends)
                 .build();
+    }
+    
+    private static final DateTimeFormatter DAY_FMT   = DateTimeFormatter.ofPattern("dd/MM");
+    private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("MM/yyyy");
+
+    @Override
+	public TrendsResponseDTO getTrends(String period, int offset) {
+        return switch (period.toUpperCase()) {
+            case "WEEK"  -> buildWeekTrends(offset);
+            case "MONTH" -> buildMonthTrends(offset);
+            case "YEAR"  -> buildYearTrends(offset);
+            default      -> buildWeekTrends(offset);
+        };
+    }
+
+    private TrendsResponseDTO buildWeekTrends(int offset) {
+        LocalDate weekStart = LocalDate.now()
+                .with(DayOfWeek.MONDAY)
+                .minusWeeks(offset);
+        LocalDate weekEnd   = weekStart.plusDays(7);
+
+        LocalDateTime from = weekStart.atStartOfDay();
+        LocalDateTime to   = weekEnd.atStartOfDay();
+
+        Map<String, Long> accMap  = toMap(accountRepository.countAccountsGroupedByDate(from, to));
+        Map<String, Long> apptMap = toMap(appointmentRepository.countAppointmentsGroupedByDate(from, to));
+
+        List<DashboardTrendPointDTO> trends = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            LocalDate d = weekStart.plusDays(i);
+            trends.add(DashboardTrendPointDTO.builder()
+                    .label(d.format(DAY_FMT))
+                    .users(accMap.getOrDefault(d.toString(), 0L))
+                    .appointments(apptMap.getOrDefault(d.toString(), 0L))
+                    .build());
+        }
+
+        int weekOfYear = weekStart.get(WeekFields.ISO.weekOfWeekBasedYear());
+        return TrendsResponseDTO.builder()
+                .periodLabel("Tuần " + weekOfYear + "/" + weekStart.getYear())
+                .hasPrev(true)
+                .hasNext(offset > 0)
+                .trends(trends)
+                .build();
+    }
+
+    private TrendsResponseDTO buildMonthTrends(int offset) {
+        YearMonth ym    = YearMonth.now().minusMonths(offset);
+        LocalDate first = ym.atDay(1);
+        LocalDate last  = ym.atEndOfMonth();
+
+        LocalDateTime from = first.atStartOfDay();
+        LocalDateTime to   = last.plusDays(1).atStartOfDay();
+
+        Map<String, Long> accMap  = toMap(accountRepository.countAccountsGroupedByDate(from, to));
+        Map<String, Long> apptMap = toMap(appointmentRepository.countAppointmentsGroupedByDate(from, to));
+
+        List<DashboardTrendPointDTO> trends = new ArrayList<>();
+        for (LocalDate d = first; !d.isAfter(last); d = d.plusDays(1)) {
+            trends.add(DashboardTrendPointDTO.builder()
+                    .label(d.format(DAY_FMT))
+                    .users(accMap.getOrDefault(d.toString(), 0L))
+                    .appointments(apptMap.getOrDefault(d.toString(), 0L))
+                    .build());
+        }
+
+        return TrendsResponseDTO.builder()
+                .periodLabel("Tháng " + ym.format(MONTH_FMT))
+                .hasPrev(true)
+                .hasNext(offset > 0)
+                .trends(trends)
+                .build();
+    }
+
+    private TrendsResponseDTO buildYearTrends(int offset) {
+        int year = LocalDate.now().getYear() - offset;
+
+        LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
+        LocalDateTime to   = LocalDate.of(year + 1, 1, 1).atStartOfDay();
+
+        Map<String, Long> accMap  = toMap(accountRepository.countAccountsGroupedByMonth(from, to));
+        Map<String, Long> apptMap = toMap(appointmentRepository.countAppointmentsGroupedByMonth(from, to));
+
+        List<DashboardTrendPointDTO> trends = new ArrayList<>();
+        for (int m = 1; m <= 12; m++) {
+            String key   = String.format("%d-%02d", year, m);
+            String label = String.format("%02d/%d", m, year);
+            trends.add(DashboardTrendPointDTO.builder()
+                    .label(label)
+                    .users(accMap.getOrDefault(key, 0L))
+                    .appointments(apptMap.getOrDefault(key, 0L))
+                    .build());
+        }
+
+        return TrendsResponseDTO.builder()
+                .periodLabel("Năm " + year)
+                .hasPrev(true)
+                .hasNext(offset > 0)
+                .trends(trends)
+                .build();
+    }
+
+    private Map<String, Long> toMap(List<Object[]> rows) {
+        Map<String, Long> map = new HashMap<>();
+        for (Object[] row : rows) {
+            map.put(row[0].toString(), ((Number) row[1]).longValue());
+        }
+        return map;
     }
 
     @Override
@@ -188,8 +369,6 @@ public class AdminServiceImpl implements AdminService {
         doctorRepository.save(doctor);
     }
 
-    // ─── Posts ────────────────────────────────────────────────────────────────
-
     @Override
     public Page<AdminPostDTO> getPosts(String keyword, String category, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -218,8 +397,6 @@ public class AdminServiceImpl implements AdminService {
         }
         forumPostRepository.deleteById(postId);
     }
-
-    // ─── Export ───────────────────────────────────────────────────────────────
 
     @Override
     public byte[] exportAccountsCsv() {

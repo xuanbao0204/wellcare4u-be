@@ -10,6 +10,7 @@ import vn.wellcare4u.enums.EAccountStatus;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.repositories.AccountRepository;
 import vn.wellcare4u.services.AccountService;
+import vn.wellcare4u.services.RefreshTokenService;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -19,6 +20,9 @@ public class AccountServiceImpl implements AccountService {
 
 	@Autowired
 	private PasswordEncoder pwEncoder;
+	
+	@Autowired
+    private RefreshTokenService refreshTokenService;
 
 	@Override
 	public void activeAccount(Long id) {
@@ -78,12 +82,27 @@ public class AccountServiceImpl implements AccountService {
 	}
 	
 	@Override
-	public void forgotPassword(String email) {
+	public void resetPassword(String email, String newPassword) {
 
-		Account acc = accRepo.findByEmail(email).orElseThrow(
-				() -> new AppException("Tài khoản không tồn tại", "ACCOUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
+	    Account acc = accRepo.findByEmail(email)
+	            .orElseThrow(() -> new AppException(
+	                    "Tài khoản không tồn tại",
+	                    "ACCOUNT_NOT_FOUND",
+	                    HttpStatus.NOT_FOUND
+	            ));
+	    if (pwEncoder.matches(newPassword, acc.getPassword())) {
+	        throw new AppException(
+	                "Mật khẩu mới không được trùng mật khẩu cũ",
+	                "DUPLICATE_PASSWORD",
+	                HttpStatus.BAD_REQUEST
+	        );
+	    }
 
-		
+	    acc.setPassword(pwEncoder.encode(newPassword));
+
+	    accRepo.save(acc);
+
+	    refreshTokenService.deleteByAccount(acc);
 	}
 	
 	@Override

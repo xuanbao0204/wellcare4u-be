@@ -32,4 +32,8 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long>{
 		        @Param("onlyVerified") Boolean onlyVerified,
 		        Pageable pageable
 		);
+	
+	long countByVerifiedTrue();
+
+    long countByVerifiedFalse();
 }

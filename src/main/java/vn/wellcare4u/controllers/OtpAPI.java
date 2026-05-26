@@ -39,7 +39,7 @@ public class OtpAPI {
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .status(200)
-                        .message("Xác thực thành công! Tài khoản của bạn đã được kích hoạt.")
+                        .message("Xác thực thành công!")
                         .build()
         );
     }

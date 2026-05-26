@@ -4,6 +4,7 @@ import java.util.List;
 
 import jakarta.transaction.Transactional;
 import vn.wellcare4u.entities.Account;
+import vn.wellcare4u.entities.NotificationRecipient;
 import vn.wellcare4u.models.dto.NotificationDTO;
 import vn.wellcare4u.models.request.NotificationRequest;
 
@@ -16,6 +17,8 @@ public interface NotificationService {
 	List<NotificationDTO> getMyNotifications(String email);
 
 	void send(NotificationRequest req);
+
+	NotificationDTO mapToDTO(NotificationRecipient r);
 
 //	void markAsRead(Long id, String email);
 //
