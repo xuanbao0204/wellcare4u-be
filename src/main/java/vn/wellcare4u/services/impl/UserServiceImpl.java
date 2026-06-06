@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 
 import vn.wellcare4u.entities.User;
 import vn.wellcare4u.exception.AppException;
+import vn.wellcare4u.models.dto.ProfileCompletionResult;
 import vn.wellcare4u.models.dto.UserDTO;
 import vn.wellcare4u.models.request.UserInfoRequest;
 import vn.wellcare4u.repositories.UserRepository;
+import vn.wellcare4u.services.ProfileCompletionService;
 import vn.wellcare4u.services.UserService;
 
 @Service
@@ -16,13 +18,17 @@ public class UserServiceImpl implements UserService{
 	@Autowired
 	private UserRepository userRepo;
 	
+	@Autowired
+	private ProfileCompletionService profileCompletionServ;
+	
 	@Override
 	public UserDTO getUserInfo(Long accountId) {
 		User user = userRepo.findByAccount_Id(accountId).orElseThrow(() -> new AppException("Không tìm thấy profile tích hợp", "PROFILE_NOT_FOUND", HttpStatus.NOT_FOUND));
 		return convertToDTO(user);
 	}
 	
-	private UserDTO convertToDTO(User user) {
+	@Override
+	public UserDTO convertToDTO(User user) {
 		UserDTO dto = new UserDTO();
 		dto.setId(user.getId());
 		dto.setEmail(user.getAccount().getEmail());
@@ -33,6 +39,7 @@ public class UserServiceImpl implements UserService{
 		dto.setGender(user.getGender());
 		dto.setRole(user.getAccount().getRole().name());
 		dto.setStatus(user.getAccount().getStatus().name());
+		dto.setProfileCompleted(user.isProfileCompleted());
 		return dto;
 	}
 
@@ -71,6 +78,13 @@ public class UserServiceImpl implements UserService{
 	    
 	    if (request.getAvatar() != null)
 	        user.setAvatar(request.getAvatar());
+
+	    ProfileCompletionResult completion =
+	            profileCompletionServ.calculate(user);
+
+	    user.setProfileCompleted(
+	            completion.completed()
+	    );
 
 	    userRepo.save(user);
 

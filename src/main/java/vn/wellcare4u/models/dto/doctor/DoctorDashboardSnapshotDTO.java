@@ -18,9 +18,9 @@ public class DoctorDashboardSnapshotDTO {
 
     private DoctorDashboardStatsDTO stats;
     private List<AppointmentDTO> upcomingAppointments;
-
+    
     private List<AppointmentDTO> recentAppointments;
-
+    
     private String aiSummary;
 
     @Data

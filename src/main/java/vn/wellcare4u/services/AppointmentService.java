@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import jakarta.transaction.Transactional;
 import vn.wellcare4u.entities.Appointment;
 import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.EAppointmentType;
@@ -22,8 +21,6 @@ public interface AppointmentService {
 	Page<AppointmentDTO> getAppointmentByPatient(String patientEmail, EAppointmentStatus status, EAppointmentType type, Pageable pageable);
 
 	Page<AppointmentDTO> getAppointmentByDoctor(String doctorEmail, EAppointmentStatus status, EAppointmentType type, Pageable pageable);
-//
-//	void cancelAppointmentDoctor(Long doctor, Long appointmentId);
 
 	void confirmAppointmentDoctor(Long doctor, Long appointmentId);
 

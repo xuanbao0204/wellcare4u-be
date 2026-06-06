@@ -20,10 +20,9 @@ public class AdminPostDTO {
     private String authorName;
     private String authorEmail;
     private boolean isAnonymous;
-    private boolean isVerifiedAnswer;
-    private int viewCount;
+    private long viewCount;
     private long likes;
-    private int commentCount;
+    private long commentCount;
     private List<String> tags;
     private String createdAt;
 }

@@ -3,12 +3,16 @@ package vn.wellcare4u.repositories.doctor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
 import vn.wellcare4u.entities.doctor.TimeSlot;
 import vn.wellcare4u.enums.ETimeSlotStatus;
 
@@ -21,17 +25,17 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
 
 	@Modifying
 	@Query("""
-	    DELETE FROM TimeSlot t
-	    WHERE t.status = 'AVAILABLE'
-	    AND (
-	        t.date < CURRENT_DATE OR
-	        (t.date = CURRENT_DATE AND t.endTime < CURRENT_TIME)
-	        )
-	    AND NOT EXISTS(
-			    SELECT 1 FROM Appointment a
-				WHERE a.timeSlot.id = t.id
-			)
-	""")
+			    DELETE FROM TimeSlot t
+			    WHERE t.status = 'AVAILABLE'
+			    AND (
+			        t.date < CURRENT_DATE OR
+			        (t.date = CURRENT_DATE AND t.endTime < CURRENT_TIME)
+			        )
+			    AND NOT EXISTS(
+					    SELECT 1 FROM Appointment a
+						WHERE a.timeSlot.id = t.id
+					)
+			""")
 	void deleteAvailableSlots();
 
 	@Query("""
@@ -58,4 +62,15 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
 	List<TimeSlot> findByScheduleIdAndDateGreaterThanEqualAndStatus(Long id, LocalDate today,
 			ETimeSlotStatus available);
 
+	@Query("""
+			    SELECT ts
+			    FROM TimeSlot ts
+			    WHERE ts.doctor.id IN :doctorIds
+			    AND ts.date = :date
+			    AND ts.status = 'AVAILABLE'
+			""")
+	List<TimeSlot> findAvailableSlotsByDoctors(@Param("doctorIds") List<Long> doctorIds, @Param("date") LocalDate date);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<TimeSlot> findLockedById(Long id);
 }

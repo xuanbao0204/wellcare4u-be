@@ -8,7 +8,8 @@ public enum ENotificationType {
 
 	INFO("Thông tin"), 
 	WARNING ("Cảnh báo"), 
-	SYSTEM ("Hệ thống");
+	SYSTEM ("Hệ thống"),
+	REMIND ("Nhắc nhở");
 	
 	private final String value;
 	

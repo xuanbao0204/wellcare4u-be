@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,4 +33,16 @@ public class AuditLog {
     private Long entityId;
 
     private LocalDateTime timestamp;
+    
+    @PrePersist
+    private void onCreate() {
+    	timestamp = LocalDateTime.now();
+    }
+    
+    public AuditLog(User actor, String action, String entityType) {
+    	this.actor = actor;
+    	this.action = action;
+    	this.entityType = entityType;
+    	this.timestamp = LocalDateTime.now();
+    }
 }

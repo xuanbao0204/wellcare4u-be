@@ -13,14 +13,18 @@ public class PostDetailDTO {
     private Long id;
     private String title;
     private String content;
-    private ESpecialization category;
+    private ESpecialization relatedSpecialization;
+    private String category;
     private AuthorDTO author;
     private boolean isAnonymous;
-    private boolean isVerifiedAnswer;
-    private int viewCount;
+    private long viewCount;
     private long likes;
+    private long commentCount;
+    private boolean allowComment;
     private List<String> tags;
     private List<CommentDTO> comments;
     private LocalDateTime createdAt;
     private String status;
+    private boolean likedByCurrentUser;
+    private ModerationResultDTO violationCheck;
 }

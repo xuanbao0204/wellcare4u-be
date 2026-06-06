@@ -11,14 +11,17 @@ import vn.wellcare4u.entities.Account;
 import vn.wellcare4u.entities.RefreshToken;
 import vn.wellcare4u.entities.User;
 import vn.wellcare4u.enums.EAccountStatus;
+import vn.wellcare4u.enums.ENotificationType;
 import vn.wellcare4u.enums.ERole;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.factory.UserFactory;
 import vn.wellcare4u.models.request.LoginRequest;
+import vn.wellcare4u.models.request.NotificationRequest;
 import vn.wellcare4u.models.request.RegisterRequest;
 import vn.wellcare4u.models.response.LoginResponse;
 import vn.wellcare4u.repositories.AccountRepository;
 import vn.wellcare4u.services.AuthService;
+import vn.wellcare4u.services.NotificationService;
 import vn.wellcare4u.services.RefreshTokenService;
 import vn.wellcare4u.services.UserService;
 import vn.wellcare4u.utils.JwtUtil;
@@ -33,6 +36,8 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final UserFactory userFactory;
     private final RefreshTokenService refreshTokenService;
+    
+    private final NotificationService notiServ;
     
     @Override
     public void register(RegisterRequest req) {
@@ -58,8 +63,11 @@ public class AuthServiceImpl implements AuthService {
         user.setAvatar("https://res.cloudinary.com/dlueiywku/image/upload/v1772988330/user_jzkljv.png");
         user.setAccount(acc);
         acc.setUser(user);
-
-        accRepo.save(acc);
+        
+        acc = accRepo.save(acc);
+        
+        notiServ.send(NotificationRequest.toUser(acc.getUser().getId(), ENotificationType.INFO, "Chào mừng bạn đến với WellCare4U",
+				"Hãy cập nhật đầy đủ thông tin để thuận tiện hơn trong việc sử dụng nhé. Chúc bạn thật nhiều sức khỏe!", null));
     }
 
     @Override

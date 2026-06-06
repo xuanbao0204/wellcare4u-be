@@ -1,7 +1,6 @@
 package vn.wellcare4u.mapper;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 import org.springframework.stereotype.Component;
 
@@ -12,70 +11,115 @@ import vn.wellcare4u.entities.doctor.Doctor;
 import vn.wellcare4u.models.dto.forum.AuthorDTO;
 import vn.wellcare4u.models.dto.forum.CommentDTO;
 import vn.wellcare4u.models.dto.forum.PostDetailDTO;
+import vn.wellcare4u.models.dto.forum.PostManageDTO;
 import vn.wellcare4u.models.dto.forum.PostSummaryDTO;
 
 @Component
 public class ForumMapper {
 
- public PostSummaryDTO toSummary(ForumPost post) {
-     return PostSummaryDTO.builder()
-         .id(post.getId())
-         .title(post.getTitle())
-         .contentPreview(truncate(post.getContent(), 200))
-         .category(post.getCategory())
-         .author(toAuthorDTO(post.getAuthor(), post.isAnonymous()))
-         .isAnonymous(post.isAnonymous())
-         .isVerifiedAnswer(post.isVerifiedAnswer())
-         .viewCount(post.getViewCount())
-         .likes(post.getLikes())
-         .commentCount(post.getComments() != null ? post.getComments().size() : 0)
-         .tags(post.getTags())
-         .createdAt(post.getCreatedAt())
-         .status(post.getStatus().getValue())
-         .build();
- }
+	public PostSummaryDTO toSummary(ForumPost post) {
 
- public PostDetailDTO toDetail(ForumPost post) {
-     List<CommentDTO> topLevel = post.getComments().stream()
-         .filter(c -> c.getParentComment() == null)
-         .map(this::toCommentDTO)
-         .collect(Collectors.toList());
+		return PostSummaryDTO.builder()
+				.id(post.getId())
+				.title(post.getTitle())
+				.contentPreview(truncate(post.getContent(), 200))
+				.relatedSpecialization(
+						post.getRelatedSpecialization() != null ? post
+								.getRelatedSpecialization(): null)
+				.category(post.getCategory().getValue())
+				.author(toAuthorDTO(post.getAuthor(), post.isAnonymous()))
+				.isAnonymous(post.isAnonymous())
+				.viewCount(post.getViewCount())
+				.likes(post.getLikes())
+				.commentCount(post.getCommentCount())
+				.tags(post.getTags())
+				.createdAt(post.getCreatedAt())
+				.status(post.getStatus().getValue())
+				.build();
+	}
 
-     return PostDetailDTO.builder()
-         .id(post.getId())
-         .title(post.getTitle())
-         .content(post.getContent())
-         .category(post.getCategory())
-         .author(toAuthorDTO(post.getAuthor(), post.isAnonymous()))
-         .isAnonymous(post.isAnonymous())
-         .isVerifiedAnswer(post.isVerifiedAnswer())
-         .viewCount(post.getViewCount())
-         .likes(post.getLikes())
-         .tags(post.getTags())
-         .comments(topLevel)
-         .createdAt(post.getCreatedAt())
-         .status(post.getStatus().getValue())
-         .build();
- }
+	public PostManageDTO toPostManage(ForumPost post) {
+		return PostManageDTO.builder()
+				.id(post.getId())
+				.title(post.getTitle())
+				.content(post.getContent())
+				.relatedSpecialization(
+						post.getRelatedSpecialization() != null ? post
+								.getRelatedSpecialization(): null)
+				.category(post.getCategory())
+				.author(toAuthorDTO(post.getAuthor(), post.isAnonymous()))
+				.isAnonymous(post.isAnonymous())
+				.viewCount(post.getViewCount())
+				.likes(post.getLikes())
+				.commentCount(post.getCommentCount())
+				.tags(post.getTags())
+				.createdAt(post.getCreatedAt())
+				.status(post.getStatus().getValue())
+				.build();
+	}
+	
+	public PostDetailDTO toDetail(ForumPost post) {
 
- public CommentDTO toCommentDTO(ForumComment comment) {
-     List<CommentDTO> replies = comment.getPost().getComments().stream()
-         .filter(c -> c.getParentComment() != null &&
-                      c.getParentComment().getId().equals(comment.getId()))
-         .map(this::toCommentDTO)
-         .collect(Collectors.toList());
+	    return PostDetailDTO.builder()
+	            .id(post.getId())
+	            .title(post.getTitle())
+	            .content(post.getContent())
+	            .relatedSpecialization(
+	                    post.getRelatedSpecialization() != null
+	                            ? post.getRelatedSpecialization()
+	                            : null
+	            )
+	            .category(
+	                    post.getCategory() != null
+	                            ? post.getCategory().getValue()
+	                            : null
+	            )
+	            .author(
+	                    toAuthorDTO(
+	                            post.getAuthor(),
+	                            post.isAnonymous()
+	                    )
+	            )
+	            .isAnonymous(post.isAnonymous())
+	            .viewCount(post.getViewCount())
+	            .likes(post.getLikes())
+	            .commentCount(post.getCommentCount())
+	            .allowComment(post.isAllowComment())
+	            .tags(post.getTags())
+	            .createdAt(post.getCreatedAt())
+	            .status(
+	                    post.getStatus() != null
+	                            ? post.getStatus().getValue()
+	                            : null
+	            )
+	            .build();
+	}
 
-     return CommentDTO.builder()
-         .id(comment.getId())
-         .content(comment.getContent())
-         .author(toAuthorDTO(comment.getAuthor(), false))
-         .parentCommentId(comment.getParentComment() != null
-             ? comment.getParentComment().getId() : null)
-         .isExpertReply(comment.isExpertReply())
-         .createdAt(comment.getCreatedAt())
-         .replies(replies)
-         .build();
- }
+	public CommentDTO toCommentDTO(ForumComment comment) {
+
+	    return CommentDTO.builder()
+	            .id(comment.getId())
+	            .content(comment.getContent())
+	            .author(
+	                    toAuthorDTO(
+	                            comment.getAuthor(),
+	                            false
+	                    )
+	            )
+	            .parentCommentId(
+	                    comment.getParentComment() != null
+	                            ? comment.getParentComment().getId()
+	                            : null
+	            )
+	            .isExpertReply(
+	                    comment.isExpertReply()
+	            )
+	            .createdAt(
+	                    comment.getCreatedAt()
+	            )
+	            .replies(new ArrayList<>())
+	            .build();
+	}
 
  private AuthorDTO toAuthorDTO(User user, boolean isAnonymous) {
      if (isAnonymous) {

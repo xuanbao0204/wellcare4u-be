@@ -1,7 +1,6 @@
 package vn.wellcare4u.enums;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public enum ESpecialization {
@@ -53,5 +52,11 @@ public enum ESpecialization {
     	return Arrays.stream(ESpecialization.values())
     			.map(Enum::name)
     			.collect(Collectors.joining(", "));
+    }
+    
+    public static String toLabelsString() {
+        return Arrays.stream(values())
+                .map(ESpecialization::getDisplayName)
+                .collect(Collectors.joining(", "));
     }
 }

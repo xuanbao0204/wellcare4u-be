@@ -21,4 +21,5 @@ public class UserDTO {
     private String avatar;
     private String role;
     private String status;
+    private boolean isProfileCompleted;
 }

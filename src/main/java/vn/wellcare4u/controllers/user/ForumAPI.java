@@ -16,15 +16,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import vn.wellcare4u.enums.EForumCategory;
 import vn.wellcare4u.enums.EPostSortType;
 import vn.wellcare4u.enums.ESpecialization;
 import vn.wellcare4u.models.ApiResponse;
 import vn.wellcare4u.models.dto.forum.CommentDTO;
 import vn.wellcare4u.models.dto.forum.PostDetailDTO;
+import vn.wellcare4u.models.dto.forum.PostManageDTO;
 import vn.wellcare4u.models.dto.forum.PostSummaryDTO;
 import vn.wellcare4u.models.request.CreateCommentRequest;
 import vn.wellcare4u.models.request.PostRequest;
 import vn.wellcare4u.services.ForumService;
+import vn.wellcare4u.services.UserService;
 
 @RestController
 @RequestMapping("/api/v1/forum")
@@ -32,26 +35,53 @@ import vn.wellcare4u.services.ForumService;
 public class ForumAPI {
 
 	private final ForumService forumService;
+	private final UserService uServ;
 
 	@GetMapping("/posts")
 	public ApiResponse<Page<PostSummaryDTO>> getAllPosts(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size, 
-			@RequestParam(required = false) ESpecialization category,
+			@RequestParam(required = false) EForumCategory category,
+			@RequestParam(required = false) ESpecialization specialization,
 			@RequestParam(required = false) String keyword, 
 			@RequestParam(defaultValue = "NEWEST") EPostSortType sort) {
 		return ApiResponse.<Page<PostSummaryDTO>>builder()
 				.status(200)
 				.message("Get posts successfully")
-				.data(forumService.getAllPosts(page, size, category, keyword, sort))
+				.data(forumService.getAllPosts(page, size, category, specialization, keyword, sort))
+				.build();
+	}
+	
+	@GetMapping("/posts-manage")
+	public ApiResponse<Page<PostManageDTO>> getAllPostsByUserId(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size, 
+			@RequestParam(required = false) EForumCategory category,
+			@RequestParam(required = false) ESpecialization specialization,
+			@RequestParam(required = false) String keyword, 
+			@RequestParam(defaultValue = "NEWEST") EPostSortType sort, Authentication auth) {
+		
+		if (auth == null || !auth.isAuthenticated()) {
+			return ApiResponse.<Page<PostManageDTO>>builder()
+					.status(401)
+					.message("Not authorized")
+					.build();
+		}
+		
+		return ApiResponse.<Page<PostManageDTO>>builder()
+				.status(200)
+				.message("Get posts successfully")
+				.data(forumService.getAllPostsByUserId(page, size, category, specialization, keyword, sort, uServ.getIdFromEmail(auth.getName())))
 				.build();
 	}
 
 	@GetMapping("/posts/{postId}")
-	public ApiResponse<PostDetailDTO> getPost(@PathVariable Long postId) {
+	public ApiResponse<PostDetailDTO> getPost(@PathVariable Long postId, Authentication auth) {
+		
+		String email = auth != null ? auth.getName() : null;
+		
 		return ApiResponse.<PostDetailDTO>builder()
 				.status(200)
 				.message("Get posts successfully")
-				.data(forumService.getPost(postId))
+				.data(forumService.getPost(postId, email))
 				.build();
 	}
 
@@ -110,7 +140,7 @@ public class ForumAPI {
 		String accountId = auth.getName();
 		forumService.deletePost(postId, accountId);
 		return ApiResponse.<Void>builder()
-				.status(HttpStatus.CREATED.value())
+				.status(200)
 				.message("Delete post detail successfully")
 				.build();
 
@@ -118,11 +148,12 @@ public class ForumAPI {
 
 	@PostMapping("/posts/{postId}/like")
 	@PreAuthorize("isAuthenticated()")
-	public ApiResponse<PostDetailDTO> likePost(@PathVariable Long postId) {
+	public ApiResponse<PostDetailDTO> likePost(@PathVariable Long postId, Authentication auth) {
+		
 		return ApiResponse.<PostDetailDTO>builder()
 				.status(HttpStatus.CREATED.value())
 				.message("Like post successfully")
-				.data(forumService.likePost(postId))
+				.data(forumService.likePost(postId, auth.getName()))
 				.build();
 	}
 

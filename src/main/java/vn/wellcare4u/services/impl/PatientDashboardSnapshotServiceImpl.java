@@ -24,7 +24,7 @@ import vn.wellcare4u.repositories.PatientRepository;
 import vn.wellcare4u.repositories.medical.MedicalRecordRepository;
 import vn.wellcare4u.repositories.medical.VitalSignRepository;
 import vn.wellcare4u.repositories.patient.PatientDashboardSnapshotRepository;
-import vn.wellcare4u.services.AIService;
+import vn.wellcare4u.services.AIToolService;
 import vn.wellcare4u.services.AppointmentService;
 import vn.wellcare4u.services.PatientDashboardSnapshotService;
 
@@ -37,9 +37,9 @@ public class PatientDashboardSnapshotServiceImpl implements PatientDashboardSnap
     private final MedicalRecordRepository recordRepo;
     private final VitalSignRepository vitalSignRepo;
     private final PatientDashboardSnapshotRepository snapshotRepo;
+    private final AIToolService aiTools;
 
     private final AppointmentService appointmentService;
-    private final AIService aiService;
 
     private final ObjectMapper objectMapper;
 
@@ -54,21 +54,33 @@ public class PatientDashboardSnapshotServiceImpl implements PatientDashboardSnap
     }
 
     @Override
+	public String generateSummary(Long patientId) {
+    	 Patient patient = patientRepo.findById(patientId)
+                 .orElseThrow(() -> new AppException(
+                         "Patient not found",
+                         "PATIENT_NOT_FOUND",
+                         HttpStatus.NOT_FOUND
+                 ));
+    	 
+		List<MedicalRecord> records = recordRepo.findByPatientIdOrderByCreatedAtDesc(patientId);
+        
+        String aiSummary = aiTools.summarizeMedicalHistory(records, patient);
+
+        PatientDashboardSnapshot snapshot = snapshotRepo.findById(patientId)
+                .orElse(PatientDashboardSnapshot.builder()
+                        .patientId(patientId)
+                        .build());
+        snapshot.setAiSummary(aiSummary);
+        snapshotRepo.save(snapshot);
+        return aiSummary;
+
+    }
+    
+    @Override
     @Transactional
     public void rebuildSnapshot(Long patientId) {
-
-        Patient patient = patientRepo.findById(patientId)
-                .orElseThrow(() -> new AppException(
-                        "Patient not found",
-                        "PATIENT_NOT_FOUND",
-                        HttpStatus.NOT_FOUND
-                ));
-
         List<MedicalRecord> records =
                 recordRepo.findByPatientIdOrderByCreatedAtDesc(patientId);
-
-        String aiSummary =
-                aiService.summarizeMedicalHistory(records, patient);
 
         LocalDate lastVisitDate = records.isEmpty()
                 ? null
@@ -124,7 +136,7 @@ public class PatientDashboardSnapshotServiceImpl implements PatientDashboardSnap
 
         try {
 
-            snapshot.setAiSummary(aiSummary);
+            snapshot.setAiSummary(null);
 
             snapshot.setTotalMedicalRecords(records.size());
 

@@ -13,14 +13,15 @@ public class PostSummaryDTO {
     private Long id;
     private String title;
     private String contentPreview;
-    private ESpecialization category;
+    private ESpecialization relatedSpecialization;
+    private String category;
     private AuthorDTO author;
     private boolean isAnonymous;
-    private boolean isVerifiedAnswer;
-    private int viewCount;
+    private long viewCount;
     private long likes;
-    private int commentCount;
+    private long commentCount;
     private List<String> tags;
     private LocalDateTime createdAt;
     private String status;
+    private boolean isViolatingContent;
 }

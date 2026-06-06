@@ -3,6 +3,7 @@ package vn.wellcare4u.entities;
 import java.io.Serializable;
 import java.time.LocalDate;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -44,8 +45,15 @@ public abstract class User implements Serializable{
     private String phone;
     private String address;
     private String avatar;
+    
+    @Column(nullable = false)
+    private boolean isProfileCompleted = false;
 
     @OneToOne
     @JoinColumn(name = "account_id", unique = true)
     private Account account;
+    
+    public String getFullName() {
+    	return firstName + " " + lastName;
+    }
 }

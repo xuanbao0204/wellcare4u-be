@@ -1,6 +1,8 @@
 package vn.wellcare4u.services.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,7 @@ import vn.wellcare4u.models.request.PatientProfileRequest;
 import vn.wellcare4u.repositories.AppointmentRepository;
 import vn.wellcare4u.repositories.NotificationRecipientRepository;
 import vn.wellcare4u.repositories.PatientRepository;
+import vn.wellcare4u.repositories.medical.MedicalRecordRepository;
 import vn.wellcare4u.services.AppointmentService;
 import vn.wellcare4u.services.NotificationService;
 import vn.wellcare4u.services.PatientDashboardSnapshotService;
@@ -42,6 +45,7 @@ public class PatientServiceImpl implements PatientService {
 	private final NotificationService notiServ;
 	
 	private final PatientDashboardSnapshotService snapshotService;
+	private final MedicalRecordRepository medRepo;
 	private final ObjectMapper objectMapper;
 
 	@Override
@@ -187,4 +191,14 @@ public class PatientServiceImpl implements PatientService {
 	    }
 	}
 	
+	@Override
+	public Map<Long, String> getPatientIdsByDoctor(Long doctorId) {
+	    return medRepo.findAllByDoctorId(doctorId)
+	            .stream()
+	            .collect(Collectors.toMap(
+	                    r -> r.getPatient().getId(),
+	                    r -> r.getPatient().getFullName(),
+	                    (existing, replacement) -> existing
+	            ));
+	}
 }

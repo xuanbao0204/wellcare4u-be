@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -13,31 +14,30 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import vn.wellcare4u.entities.Appointment;
 import vn.wellcare4u.entities.Patient;
-import vn.wellcare4u.entities.doctor.Doctor;
 import vn.wellcare4u.entities.doctor.TimeSlot;
 import vn.wellcare4u.entities.medical.MedicalRecord;
+import vn.wellcare4u.enums.EAppointmentEventType;
 import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.EAppointmentType;
 import vn.wellcare4u.enums.ECancelBy;
-import vn.wellcare4u.enums.ENotificationType;
 import vn.wellcare4u.enums.ETimeSlotStatus;
+import vn.wellcare4u.events.AppointmentEvent;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.models.dto.AppointmentDTO;
 import vn.wellcare4u.models.request.AppointmentRequest;
 import vn.wellcare4u.models.request.CancelAppointmentRequest;
-import vn.wellcare4u.models.request.NotificationRequest;
 import vn.wellcare4u.repositories.AppointmentRepository;
-import vn.wellcare4u.repositories.DoctorRepository;
 import vn.wellcare4u.repositories.PatientRepository;
 import vn.wellcare4u.repositories.doctor.TimeSlotRepository;
 import vn.wellcare4u.repositories.medical.MedicalRecordRepository;
 import vn.wellcare4u.services.AppointmentService;
-import vn.wellcare4u.services.NotificationService;
 import vn.wellcare4u.services.UserService;
 
 @Service
+@RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
 
 	@Autowired
@@ -47,18 +47,14 @@ public class AppointmentServiceImpl implements AppointmentService {
 
 	@Autowired
 	private PatientRepository patientRepo;
-	
-	@Autowired
-	private DoctorRepository doctorRepo;
 
 	@Autowired
 	private UserService uServ;
 
 	@Autowired
 	private MedicalRecordRepository recordRepo;
-
-	@Autowired
-	private NotificationService notiServ;
+	
+	private final ApplicationEventPublisher publisher;
 
 	@Override
 	public List<AppointmentDTO> getAppointmentByPatient(Long patientId) {
@@ -87,6 +83,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 	}
 
 	@Override
+	@Transactional
 	public void cancel(Long userId, Long appointmentId, CancelAppointmentRequest req) {
 
 		Appointment apt = appointmentRepo.findById(appointmentId).orElseThrow(
@@ -130,67 +127,61 @@ public class AppointmentServiceImpl implements AppointmentService {
 
 		timeSlotRepo.save(slot);
 		
-		notiServ.send(
-		        NotificationRequest.toUsers(
-		        		List.of(
-		            apt.getPatient().getId(), apt.getDoctor().getId()),
-		            ENotificationType.WARNING,
-		            "Cập nhật về lịch hẹn",
-		            "Lịch hẹn với mã #" + apt.getId() + " đã bị hủy bởi " + (isDoctor ? "Bác sĩ" : "Bệnh nhân") + ". Xem chi tiết",
-		            appointmentId
+		publisher.publishEvent(
+		        new AppointmentEvent(
+		                EAppointmentEventType.CANCELLED,
+		                apt,
+		                isPatient ? "PATIENT" : "DOCTOR",
+		                req.getReason()
 		        )
-		    );
+		);
+		
 	}
+
 
 	@Override
 	@Transactional
 	public AppointmentDTO bookSlot(AppointmentRequest req, Long patientId) {
 
-		TimeSlot slot = timeSlotRepo.findById(req.getSlotId())
-				.orElseThrow(() -> new RuntimeException("Slot not found"));
-
-		if (slot.getStatus() != ETimeSlotStatus.AVAILABLE) {
-			throw new RuntimeException("Slot not available");
-		}
-
-		slot.setStatus(ETimeSlotStatus.BOOKED);
-
 		Patient patient = patientRepo.findById(patientId).orElseThrow(
 				() -> new AppException("Không tìm thấy bệnh nhân", "PATIENT_NOT_FOUND", HttpStatus.BAD_REQUEST));
 
+		TimeSlot slot = timeSlotRepo.findLockedById(req.getSlotId())
+				.orElseThrow(() -> new RuntimeException("Slot không tồn tại."));
+
+		if (slot.getStatus() != ETimeSlotStatus.AVAILABLE) {
+
+			throw new RuntimeException("Slot không còn khả dụng.");
+		}
+
+		EAppointmentType type = req.getType() != null ? req.getType() : EAppointmentType.EXAMINATION;
+
 		Appointment appt = new Appointment();
+
 		appt.setTimeSlot(slot);
 		appt.setDoctor(slot.getDoctor());
 		appt.setPatient(patient);
 		appt.setReason(req.getReason());
-		appt.setType(req.getType());
-		if (req.getType() == EAppointmentType.FOLLOW_UP || req.getType() == EAppointmentType.RESCHEDULE)
-			appt.setStatus(EAppointmentStatus.CONFIRMED);
-		else
-			appt.setStatus(EAppointmentStatus.PENDING);
+		appt.setType(type);
 		appt.setCreatedAt(LocalDateTime.now());
 
-		appointmentRepo.save(appt);
+		if (type == EAppointmentType.FOLLOW_UP || type == EAppointmentType.RESCHEDULE) {
 
-		notiServ.send(
-		        NotificationRequest.toUser(
-		            appt.getPatient().getId(),
-		            ENotificationType.INFO,
-		            "Cập nhật về lịch hẹn",
-		            "Lịch hẹn đã được tạo thành công",
-		            null
-		        )
-		    );
-		
-		
-		notiServ.send(
-				NotificationRequest.toUser(
-						slot.getDoctor().getId(),
-						ENotificationType.INFO,
-						"Thông báo lịch hẹn",
-						"Có một lịch hẹn mới đang chờ bạn xử lý",
-						null));
+			appt.setStatus(EAppointmentStatus.CONFIRMED);
 
+		} else {
+
+			appt.setStatus(EAppointmentStatus.PENDING);
+		}
+
+		appt = appointmentRepo.save(appt);
+
+		slot.setStatus(ETimeSlotStatus.BOOKED);
+
+		timeSlotRepo.save(slot);
+
+		publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.BOOKED, appt, "PATIENT", null));
+		
 		return mapToDTO(appt);
 	}
 	
@@ -221,30 +212,14 @@ public class AppointmentServiceImpl implements AppointmentService {
 
 		appointmentRepo.save(appt);
 
-		notiServ.send(
-		        NotificationRequest.toUser(
-		            patient.getId(),
-		            ENotificationType.INFO,
-		            "Cập nhật về lịch hẹn",
-		            "Lịch hẹn đã được bác sỹ tạo thành công do bị hủy",
-		            null
-		        )
-		    );
+		publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.REBOOK, appt, "DOCTOR", null));
 		
-		
-		notiServ.send(
-				NotificationRequest.toUser(
-						slot.getDoctor().getId(),
-						ENotificationType.INFO,
-						"Thông báo lịch hẹn",
-						"Bạn đã tạo thành công lịch hẹn lại cho lịch đã bị hủy",
-						null));
-
 		return mapToDTO(appt);
 	}
 
 
 	@Override
+	@Transactional
 	public void confirmAppointmentDoctor(Long doctor, Long appointmentId) {
 		Appointment apt = appointmentRepo.findById(appointmentId).orElseThrow(
 				() -> new AppException("Appointment không hợp lệ", "APPOINTMENT_NOT_FOUND", HttpStatus.BAD_REQUEST));
@@ -259,18 +234,12 @@ public class AppointmentServiceImpl implements AppointmentService {
 
 		appointmentRepo.save(apt);
 		
-		notiServ.send(
-		        NotificationRequest.toUser(
-		            apt.getPatient().getId(),
-		            ENotificationType.INFO,
-		            "Cập nhật về lịch hẹn",
-		            "Lịch hẹn với mã #" + apt.getId() + " đã được xác nhận",
-		            appointmentId
-		        )
-		    );
+		publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.CONFIRMED, apt, "DOCTOR", null));
+		
 	}
 
 	@Override
+	@Transactional
 	public void checkIn(Long patientId, Long appointmentId) {
 		Appointment apt = appointmentRepo.findById(appointmentId).orElseThrow(
 				() -> new AppException("Appointment không hợp lệ", "APPOINTMENT_NOT_FOUND", HttpStatus.BAD_REQUEST));
@@ -283,18 +252,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 		apt.setUpdatedAt(now);
 
 		appointmentRepo.save(apt);
-		notiServ.send(
-		        NotificationRequest.toUser(
-		            apt.getDoctor().getId(),
-		            ENotificationType.INFO,
-		            "Cập nhật về lịch hẹn",
-		            "Lịch hẹn với mã #" + apt.getId() + ":bệnh nhân đã đến",
-		            appointmentId
-		        )
-		    );
+
+		publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.PATIENT_CHECK_IN, apt, "PATIENT", null));
+		
 	}
 
 	@Override
+	@Transactional
 	public void completeAppointmentDoctor(Long doctorId, Long appointmentId) {
 	    Appointment apt = appointmentRepo.findById(appointmentId)
 	            .orElseThrow(() -> new AppException(
@@ -313,15 +277,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 	    apt.setUpdatedAt(LocalDateTime.now());
 	    appointmentRepo.save(apt);
 
-	    notiServ.send(
-	        NotificationRequest.toUser(
-	            apt.getPatient().getId(),
-	            ENotificationType.INFO,
-	            "Cập nhật về lịch hẹn",
-	            "Lịch hẹn với mã #" + apt.getId() + " đã hoàn thành",
-	            appointmentId
-	        )
-	    );
+	    publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.COMPLETED, apt, "DOCTOR", null));
+		
 	}
 
 	@Override

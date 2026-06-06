@@ -8,4 +8,6 @@ public interface PatientDashboardSnapshotService {
 
 	PatientDashboardSnapshot getSnapshot(Long patientId);
 
+	String generateSummary(Long patientId);
+
 }

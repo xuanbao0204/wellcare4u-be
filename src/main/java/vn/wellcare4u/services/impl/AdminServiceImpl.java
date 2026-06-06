@@ -17,6 +17,8 @@ import vn.wellcare4u.entities.User;
 import vn.wellcare4u.entities.doctor.Doctor;
 import vn.wellcare4u.enums.EAccountStatus;
 import vn.wellcare4u.enums.EAppointmentStatus;
+import vn.wellcare4u.enums.EForumCategory;
+import vn.wellcare4u.enums.EPostSortType;
 import vn.wellcare4u.enums.ERole;
 import vn.wellcare4u.enums.ESpecialization;
 import vn.wellcare4u.exception.AppException;
@@ -370,24 +372,30 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Page<AdminPostDTO> getPosts(String keyword, String category, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<ForumPost> posts;
+	public Page<AdminPostDTO> getAllPosts(int page, int size, EForumCategory category, ESpecialization specialization,
+			String keyword, EPostSortType sort) {
 
-        if (keyword != null && !keyword.isBlank() && category != null && !category.isBlank()) {
-            ESpecialization spec = ESpecialization.valueOf(category.toUpperCase());
-            posts = forumPostRepository.searchWithFilter(keyword, spec, pageable);
-        } else if (keyword != null && !keyword.isBlank()) {
-            posts = forumPostRepository.searchByKeyword(keyword, pageable);
-        } else if (category != null && !category.isBlank()) {
-            ESpecialization spec = ESpecialization.valueOf(category.toUpperCase());
-            posts = forumPostRepository.findByCategory(spec, pageable);
-        } else {
-            posts = forumPostRepository.findAll(pageable);
-        }
+		Sort sorting = switch (sort) {
+		case MOST_LIKED -> Sort.by("likes").descending();
+		case MOST_VIEWED -> Sort.by("viewCount").descending();
+		case MOST_COMMENTED -> Sort.by("comments.size").descending();
+		default -> Sort.by("createdAt").descending(); // NEWEST
+		};
 
-        return posts.map(this::toAdminPostDTO);
-    }
+		Pageable pageable = PageRequest.of(page, size, sorting);
+
+		Page<ForumPost> posts;
+		if (keyword != null && !keyword.isBlank()) {
+
+			posts = forumPostRepository.searchWithFilter(keyword, category, specialization, pageable);
+
+		} else {
+
+			posts = forumPostRepository.filterPosts(category, specialization, pageable);
+		}
+
+		return posts.map(this::toAdminPostDTO);
+	}
 
     @Override
     @Transactional
@@ -493,10 +501,9 @@ public class AdminServiceImpl implements AdminService {
                 .authorName(authorName)
                 .authorEmail(authorEmail)
                 .isAnonymous(p.isAnonymous())
-                .isVerifiedAnswer(p.isVerifiedAnswer())
                 .viewCount(p.getViewCount())
                 .likes(p.getLikes())
-                .commentCount(p.getComments() != null ? p.getComments().size() : 0)
+                .commentCount(p.getCommentCount())
                 .tags(p.getTags())
                 .createdAt(p.getCreatedAt() != null ? p.getCreatedAt().format(FMT) : null)
                 .build();

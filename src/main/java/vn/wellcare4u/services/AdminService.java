@@ -1,8 +1,10 @@
 package vn.wellcare4u.services;
 
 import org.springframework.data.domain.Page;
-import org.springframework.transaction.annotation.Transactional;
 
+import vn.wellcare4u.enums.EForumCategory;
+import vn.wellcare4u.enums.EPostSortType;
+import vn.wellcare4u.enums.ESpecialization;
 import vn.wellcare4u.models.dto.admin.AdminAccountDTO;
 import vn.wellcare4u.models.dto.admin.AdminPostDTO;
 import vn.wellcare4u.models.dto.admin.DashboardStatsDTO;
@@ -16,8 +18,6 @@ public interface AdminService {
 
 	void deletePost(Long postId);
 
-	Page<AdminPostDTO> getPosts(String keyword, String category, int page, int size);
-
 	void unverifyDoctor(Long accountId);
 
 	void verifyDoctor(Long accountId);
@@ -27,5 +27,8 @@ public interface AdminService {
 	DashboardStatsDTO getDashboardStats();
 
 	TrendsResponseDTO getTrends(String period, int offset);
+
+	Page<AdminPostDTO> getAllPosts(int page, int size, EForumCategory category, ESpecialization specialization,
+			String keyword, EPostSortType sort);
 
 }

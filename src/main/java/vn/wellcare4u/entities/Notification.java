@@ -41,6 +41,9 @@ public class Notification {
 	private Long referenceId;
 
 	private LocalDateTime createdAt;
+	
+	@ManyToOne
+	private User sender;
 
 	@PrePersist
 	public void prePersist() {

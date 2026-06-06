@@ -21,22 +21,21 @@ import vn.wellcare4u.repositories.AppointmentRepository;
 import vn.wellcare4u.repositories.DoctorRepository;
 import vn.wellcare4u.repositories.doctor.DoctorDashboardSnapshotRepository;
 import vn.wellcare4u.repositories.medical.MedicalRecordRepository;
-import vn.wellcare4u.services.AIService;
+import vn.wellcare4u.services.AIToolService;
 import vn.wellcare4u.services.AppointmentService;
 import vn.wellcare4u.services.DoctorDashboardSnapshotService;
 
 @Service
 @RequiredArgsConstructor
-public class DoctorDashboardSnapshotServiceImpl
-        implements DoctorDashboardSnapshotService {
+public class DoctorDashboardSnapshotServiceImpl implements DoctorDashboardSnapshotService {
 
-    private final DoctorRepository doctorRepo;
     private final AppointmentRepository appointmentRepo;
     private final MedicalRecordRepository medicalRecordRepo;
     private final DoctorDashboardSnapshotRepository snapshotRepo;
+    private final DoctorRepository doctorRepo;
     private final AppointmentService appointmentService;
-    private final AIService aiService;
     private final ObjectMapper objectMapper;
+    private final AIToolService aiTools;
 
     @Override
     public DoctorDashboardSnapshot getSnapshot(Long doctorId) {
@@ -46,17 +45,33 @@ public class DoctorDashboardSnapshotServiceImpl
                     return snapshotRepo.findById(doctorId).orElseThrow();
                 });
     }
+    
+    @Override
+	public String generateSummary(Long doctorId) {
+    	 Doctor doctor = doctorRepo.findById(doctorId)
+                 .orElseThrow(() -> new AppException(
+                         "Doctor not found",
+                         "DOCTOR_NOT_FOUND",
+                         HttpStatus.NOT_FOUND
+                 ));
+    	List<Appointment> allAppointments = appointmentRepo.findAllByDoctorId(doctorId);
+        List<MedicalRecord> records       = medicalRecordRepo.findByDoctorId(doctorId);
+        
+        String aiSummary = aiTools.summarizeDoctorDashboard(doctor, allAppointments, records);
 
+        DoctorDashboardSnapshot snapshot = snapshotRepo.findById(doctorId)
+                .orElse(DoctorDashboardSnapshot.builder()
+                        .doctorId(doctorId)
+                        .build());
+        snapshot.setAiSummary(aiSummary);
+        snapshotRepo.save(snapshot);
+        return aiSummary;
+
+    }
+    
     @Override
     @Transactional
     public void rebuildSnapshot(Long doctorId) {
-
-        Doctor doctor = doctorRepo.findById(doctorId)
-                .orElseThrow(() -> new AppException(
-                        "Doctor not found",
-                        "DOCTOR_NOT_FOUND",
-                        HttpStatus.NOT_FOUND
-                ));
 
         long totalAppointments    = appointmentRepo.countByDoctorId(doctorId);
         long completedAppointments = appointmentRepo.countByDoctorIdAndStatus(doctorId, EAppointmentStatus.COMPLETED);
@@ -67,11 +82,6 @@ public class DoctorDashboardSnapshotServiceImpl
         double cancellationRate = totalAppointments == 0
                 ? 0
                 : (cancelledAppointments * 100.0) / totalAppointments;
-
-        List<Appointment> allAppointments = appointmentRepo.findAllByDoctorId(doctorId);
-        List<MedicalRecord> records       = medicalRecordRepo.findByDoctorId(doctorId);
-
-        String aiSummary = aiService.summarizeDoctorDashboard(doctor, allAppointments, records);
 
         List<AppointmentDTO> recentAppointments =
                 appointmentRepo.findRecentAppointments(doctorId, PageRequest.of(0, 5))
@@ -91,9 +101,9 @@ public class DoctorDashboardSnapshotServiceImpl
             snapshot.setCancellationRate(cancellationRate);
             snapshot.setTotalPatients(totalPatients);
             snapshot.setTotalMedicalRecords(totalMedicalRecords);
-            snapshot.setAiSummary(aiSummary);
             snapshot.setRecentAppointmentsJson(objectMapper.writeValueAsString(recentAppointments));
             snapshot.setRefreshedAt(Instant.now());
+            snapshot.setAiSummary(null);
 
             snapshotRepo.save(snapshot);
 

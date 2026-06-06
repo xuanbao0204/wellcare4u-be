@@ -29,14 +29,11 @@ public class DoctorDashboardSnapshot {
     private Double cancellationRate;
     private Long totalPatients;
     private Long totalMedicalRecords;
-
+    @Lob
+    private String aiSummary;
     @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String recentAppointmentsJson;
-
-    @Lob
-    @Column(columnDefinition = "LONGTEXT")
-    private String aiSummary;
 
     private Instant refreshedAt;
 }

@@ -1,5 +1,6 @@
 package vn.wellcare4u.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vn.wellcare4u.entities.doctor.Doctor;
+import vn.wellcare4u.enums.ESpecialization;
 
 @Repository
 public interface DoctorRepository extends JpaRepository<Doctor, Long>{
@@ -36,4 +38,6 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long>{
 	long countByVerifiedTrue();
 
     long countByVerifiedFalse();
+    
+    List<Doctor> findBySpecializationAndVerifiedTrue(ESpecialization specialization);
 }

@@ -11,11 +11,8 @@ import org.springframework.stereotype.Service;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
-import vn.wellcare4u.entities.Appointment;
 import vn.wellcare4u.entities.doctor.Doctor;
 import vn.wellcare4u.entities.doctor.DoctorDashboardSnapshot;
-import vn.wellcare4u.entities.medical.MedicalRecord;
-import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.ESpecialization;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.models.dto.AppointmentDTO;
@@ -26,8 +23,6 @@ import vn.wellcare4u.models.request.DoctorListRequest;
 import vn.wellcare4u.models.request.DoctorProfileRequest;
 import vn.wellcare4u.repositories.AppointmentRepository;
 import vn.wellcare4u.repositories.DoctorRepository;
-import vn.wellcare4u.repositories.medical.MedicalRecordRepository;
-import vn.wellcare4u.services.AIService;
 import vn.wellcare4u.services.AppointmentService;
 import vn.wellcare4u.services.DoctorDashboardSnapshotService;
 import vn.wellcare4u.services.DoctorService;
@@ -44,15 +39,9 @@ public class DoctorServiceImpl implements DoctorService{
 	
 	@Autowired
 	private AppointmentRepository appointmentRepo;
-
-	@Autowired
-	private MedicalRecordRepository recordRepo;
 	
 	@Autowired
 	private AppointmentService apptServ;
-	
-	@Autowired
-	private AIService aiServ;
 	
 	@Autowired
 	private DoctorDashboardSnapshotService snapshotServ;
@@ -178,7 +167,6 @@ public class DoctorServiceImpl implements DoctorService{
 	                .stats(stats)
 	                .upcomingAppointments(upcomingAppointments)
 	                .recentAppointments(recentAppointments)
-	                .aiSummary(snapshot.getAiSummary())
 	                .build();
 
 	    } catch (Exception ex) {
@@ -200,7 +188,9 @@ public class DoctorServiceImpl implements DoctorService{
 				
 				.bio(doctor.getBio())
 	            .certification(doctor.getCertification())
-	            .specialization(doctor.getSpecialization().getDisplayName())
+	            .specialization(doctor.getSpecialization() != null
+                        ? doctor.getSpecialization().getDisplayName()
+                        : null)
 	            .experienceYears(doctor.getExperienceYears())
 	            .consultationFee(doctor.getConsultationFee())
 	            .clinicAddress(doctor.getClinicAddress())
@@ -212,7 +202,9 @@ public class DoctorServiceImpl implements DoctorService{
 	    return DoctorDTO.builder()
 	            .bio(doctor.getBio())
 	            .certification(doctor.getCertification())
-	            .specialization(doctor.getSpecialization().getDisplayName())
+	            .specialization(doctor.getSpecialization() != null
+                        ? doctor.getSpecialization().getDisplayName()
+                        : null)
 	            .experienceYears(doctor.getExperienceYears())
 	            .consultationFee(doctor.getConsultationFee())
 	            .clinicAddress(doctor.getClinicAddress())

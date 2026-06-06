@@ -1,6 +1,5 @@
 package vn.wellcare4u.entities.medical;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.annotation.Nullable;
@@ -65,4 +64,28 @@ public class MedicalRecord {
     private ERecordStatus status;
 
     private LocalDateTime createdAt;
+    
+    public String infoForSummary() {
+        return String.format("""
+                RecordID: %s
+                Symptoms: %s
+                Diagnosis: %s
+                ICDCode: %s
+                TreatmentPlan: %s
+                Conclusion: %s
+                FollowUp: %s
+                Status: %s
+                CreatedAt: %s
+                """,
+                id,
+                symptoms,
+                diagnosis,
+                icdCode,
+                treatmentPlan,
+                conclusion,
+                followUpDate != null ? followUpDate.getId() : "None",
+                status,
+                createdAt
+        );
+    }
 }

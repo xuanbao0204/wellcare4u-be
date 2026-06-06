@@ -3,7 +3,6 @@ package vn.wellcare4u.entities;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -15,58 +14,73 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import vn.wellcare4u.enums.EForumCategory;
 import vn.wellcare4u.enums.EPostStatus;
 import vn.wellcare4u.enums.ESpecialization;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-
+@Getter
+@Setter
 @Entity
 @Table(name = "forum_post")
 public class ForumPost {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String title;
+	private String title;
 
-    @Column(length = 5000)
-    private String content;
+	@Column(length = 10000)
+	private String content;
 
-    @Enumerated(EnumType.STRING)
-    private ESpecialization category;
-    
-    @ManyToOne
-    @JoinColumn(name = "author_id")
-    private User author;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = true)
+	private ESpecialization relatedSpecialization;
 
-    private boolean isAnonymous;
-    private boolean isVerifiedAnswer;
+	@Enumerated(EnumType.STRING)
+	private EForumCategory category;
 
-    private int viewCount;
-    private LocalDateTime createdAt;
+	@ManyToOne
+	@JoinColumn(name = "author_id")
+	private User author;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
-    private List<ForumComment> comments;
+	private boolean isAnonymous;
 
-    private long likes;
+	private boolean allowComment;
 
-    @ElementCollection
-    @CollectionTable(name = "forum_post_tags", joinColumns = @JoinColumn(name = "post_id"))
-    @Column(name = "tag")
-    private List<String> tags;
-    
-    @Enumerated(EnumType.STRING)
-    private EPostStatus status;
-    
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+	private long viewCount;
+
+	private long likes;
+
+	private long commentCount;
+
+	@Enumerated(EnumType.STRING)
+	private EPostStatus status;
+
+	@ElementCollection
+	@CollectionTable(name = "forum_post_tags", joinColumns = @JoinColumn(name = "post_id"))
+	@Column(name = "tag")
+	private List<String> tags;
+	
+	private LocalDateTime createdAt;
+
+	private LocalDateTime updatedAt;
+
+	@PrePersist
+	protected void onCreate() {
+		this.createdAt = this.updatedAt = LocalDateTime.now();
+	}
+	
+	@PreUpdate
+	protected void onUpdate() {
+		this.updatedAt = LocalDateTime.now();
+	}
 }

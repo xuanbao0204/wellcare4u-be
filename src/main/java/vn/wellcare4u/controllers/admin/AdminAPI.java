@@ -1,6 +1,8 @@
 package vn.wellcare4u.controllers.admin;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,14 +13,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import vn.wellcare4u.enums.EForumCategory;
 import vn.wellcare4u.enums.EPostSortType;
 import vn.wellcare4u.enums.ESpecialization;
 import vn.wellcare4u.models.ApiResponse;
+import vn.wellcare4u.models.dto.PageDTO;
+import vn.wellcare4u.models.dto.admin.AuditLogDTO;
 import vn.wellcare4u.models.dto.admin.DashboardStatsDTO;
 import vn.wellcare4u.models.dto.forum.PostSummaryDTO;
 import vn.wellcare4u.models.response.TrendsResponseDTO;
 import vn.wellcare4u.services.AdminReportService;
 import vn.wellcare4u.services.AdminService;
+import vn.wellcare4u.services.AuditLogService;
 import vn.wellcare4u.services.ForumService;
 import vn.wellcare4u.services.UserService;
 
@@ -31,6 +37,7 @@ public class AdminAPI {
 	private final ForumService forumServ;
 	private final AdminReportService adminReportService;
 	private final UserService userServ;
+	private final AuditLogService logServ;
 	
 	@GetMapping("/dashboard/stats")
 	public ApiResponse<DashboardStatsDTO> getAdminStats(Authentication auth) {
@@ -61,13 +68,14 @@ public class AdminAPI {
 	@GetMapping("/posts")
 	public ApiResponse<Page<PostSummaryDTO>> getAllPosts(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size, 
-			@RequestParam(required = false) ESpecialization category,
+			@RequestParam(required = false) EForumCategory category,
+			@RequestParam(required = false) ESpecialization specialization,
 			@RequestParam(required = false) String keyword, 
 			@RequestParam(defaultValue = "NEWEST") EPostSortType sort) {
 		return ApiResponse.<Page<PostSummaryDTO>>builder()
 				.status(200)
 				.message("Get posts successfully")
-				.data(forumServ.getAllPosts(page, size, category, keyword, sort))
+				.data(forumServ.getAllPosts(page, size, category, specialization, keyword, sort))
 				.build();
 	}
 	
@@ -88,5 +96,27 @@ public class AdminAPI {
 				.contentType(
 						MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
 				.body(file);
+	}
+	
+	@GetMapping("/audit-logs")
+	public ApiResponse<PageDTO<AuditLogDTO>> getAuditLogs(Authentication auth, 
+			@RequestParam(required = false) String keyword,
+			@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+		if (!auth.isAuthenticated() || auth == null) {
+			return ApiResponse.<PageDTO<AuditLogDTO>>builder()
+					.status(403)
+					.errorCode("NOT_AUTHENTICATED")
+					.message("not authenticated")
+					.build();
+		}
+		
+		Pageable pageable = PageRequest.of(page, size);
+		
+		return ApiResponse.<PageDTO<AuditLogDTO>>builder()
+				.status(200)
+				.message("Get successfully")
+				.data(logServ.getAuditLogsPage(keyword, pageable))
+				.build();
 	}
 }

@@ -4,13 +4,20 @@ import lombok.Getter;
 
 @Getter
 public enum EPostStatus {
-	PUBLIC("Công khai"), HIDDEN("Bị ẩn"), CLOSED("Đã đóng");
-	
-	private final String value;
-	
-	EPostStatus(String value) {
-		this.value = value;
-	}
-	
-	
+
+    PENDING_REVIEW("Đang chờ kiểm duyệt"),
+
+    PUBLISHED("Đã đăng"),
+
+    HIDDEN("Đã ẩn"),
+
+    LOCKED("Đã khóa"),
+
+    DELETED("Đã xóa");
+
+    private final String value;
+
+    EPostStatus(String value) {
+        this.value = value;
+    }
 }

@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/otp/**").permitAll()
                         .requestMatchers("/api/v1/account/reset-password").permitAll()
+                        .requestMatchers("/api/v1/account/activate").permitAll()
                         
                         .requestMatchers("/api/v1/account/**").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
                         .requestMatchers("/api/v1/user/**").hasAnyRole("ADMIN", "PATIENT", "DOCTOR")
@@ -53,6 +54,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/doctor/schedules/**").hasAnyRole("PATIENT", "DOCTOR")
                         
                         .requestMatchers("/api/v1/list/doctors/**").permitAll()
+                        
+                        .requestMatchers("/api/v1/forum/**").permitAll()
+                        
+                        .requestMatchers("/api/v1/ai-tools/**").permitAll()
 
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
