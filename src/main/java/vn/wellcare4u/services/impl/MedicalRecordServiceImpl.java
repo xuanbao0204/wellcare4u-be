@@ -29,9 +29,12 @@ import vn.wellcare4u.enums.EAppointmentStatus;
 import vn.wellcare4u.enums.ENotificationType;
 import vn.wellcare4u.enums.ERecordStatus;
 import vn.wellcare4u.events.DashboardChangedEvent;
+import vn.wellcare4u.events.DoctorDashboardChangedEvent;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.models.dto.AppointmentDTO;
 import vn.wellcare4u.models.dto.MedicalRecordDTO;
+import vn.wellcare4u.models.dto.MedicalRecordPrintDTO;
+import vn.wellcare4u.models.dto.MedicalRecordPrintDTO.AppointmentInfo;
 import vn.wellcare4u.models.dto.MedicalTestDTO;
 import vn.wellcare4u.models.dto.PatientDTO;
 import vn.wellcare4u.models.dto.PrescriptionItemDTO;
@@ -146,6 +149,22 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
 		List<PrescriptionItem> items = itemRepo.findByRecordId(id);
 
 		return mapToDTO(record, vital, tests, items);
+	}
+	
+	@Override
+	public MedicalRecordPrintDTO getRecordDetailPrint(Long id) {
+
+		MedicalRecord record = recordRepo.findDetailById(id).orElseThrow();
+
+		VitalSign vital = vitalSignRepo.findTopByMedicalRecordIdOrderByTimestampDesc(id).orElse(null);
+
+		List<MedicalTest> tests = testRepo.findByMedicalRecordId(id);
+
+		List<PrescriptionItem> items = itemRepo.findByRecordId(id);
+		
+		Appointment appt = record.getAppointment();
+		
+		return mapToPrintDTO(record, vital, tests, items, appt);
 	}
 
 	@Override
@@ -355,7 +374,11 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
                         record.getPatient().getId()
                 )
         );
-		
+		publisher.publishEvent(
+                new DoctorDashboardChangedEvent(
+                        record.getDoctor().getId()
+                )
+        );
 		notiServ.send(
 		        NotificationRequest.toUsers(
 		        		List.of(
@@ -389,13 +412,28 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
 				.vitalSign(mapVital(vital)).tests(mapTests(tests)).items(mapItems(items))
 				.createdAt(record.getCreatedAt()).build();
 	}
+	
+	private MedicalRecordPrintDTO mapToPrintDTO(MedicalRecord record, VitalSign vital, List<MedicalTest> tests,
+			List<PrescriptionItem> items, Appointment appt) {
+
+		return MedicalRecordPrintDTO.builder().recordId(record.getId()).doctor(mapDoctor(record.getDoctor()))
+				.patient(mapPatient(record.getPatient())).chiefComplaint(record.getChiefComplaint())
+				.symptoms(record.getSymptoms()).diagnosis(record.getDiagnosis()).icdCode(record.getIcdCode())
+				.treatmentPlan(record.getTreatmentPlan()).conclusion(record.getConclusion())
+				.followUpDate(
+						record.getFollowUpDate() != null ? record.getFollowUpDate().getTimeSlot().getDate() : null)
+				.vitalSign(mapVital(vital)).tests(mapTests(tests)).items(mapItems(items))
+				.createdAt(record.getCreatedAt())
+				.appointment(AppointmentInfo.builder().reason(appt.getReason()).slotDate(appt.getTimeSlot().getDate()).slotTime(appt.getTimeSlot().getStartTime() + " - " + appt.getTimeSlot().getEndTime()).slotId(appt.getTimeSlot().getId()).status(appt.getStatus()).type(appt.getType()).build())
+				.build();
+	}
 
 	private DoctorDTO mapDoctor(Doctor d) {
 		if (d == null)
 			return null;
 
 		return DoctorDTO.builder().firstName(d.getFirstName()).lastName(d.getLastName())
-				.specialization(d.getSpecialization().getDisplayName()).email(d.getAccount().getEmail())
+				.specialization(d.getSpecialization() != null ? d.getSpecialization().getDisplayName() : "Chưa cập nhật").email(d.getAccount().getEmail())
 				.avatar(d.getAvatar()).build();
 	}
 

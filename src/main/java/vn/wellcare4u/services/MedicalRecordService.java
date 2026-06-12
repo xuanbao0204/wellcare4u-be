@@ -3,6 +3,7 @@ package vn.wellcare4u.services;
 import java.util.List;
 
 import vn.wellcare4u.models.dto.MedicalRecordDTO;
+import vn.wellcare4u.models.dto.MedicalRecordPrintDTO;
 import vn.wellcare4u.models.dto.doctor.PatientMedicalRecordsDTO;
 import vn.wellcare4u.models.dto.doctor.PatientSummaryDTO;
 import vn.wellcare4u.models.request.medical.CreateRecordRequest;
@@ -26,5 +27,7 @@ public interface MedicalRecordService {
 	List<PatientSummaryDTO> getPatientsSummaryByDoctor(Long doctorId);
 
 	Long getRecordIdByAppointment(Long appointmentId);
+
+	MedicalRecordPrintDTO getRecordDetailPrint(Long id);
 
 }

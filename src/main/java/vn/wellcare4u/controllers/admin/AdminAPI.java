@@ -20,7 +20,7 @@ import vn.wellcare4u.models.ApiResponse;
 import vn.wellcare4u.models.dto.PageDTO;
 import vn.wellcare4u.models.dto.admin.AuditLogDTO;
 import vn.wellcare4u.models.dto.admin.DashboardStatsDTO;
-import vn.wellcare4u.models.dto.forum.PostSummaryDTO;
+import vn.wellcare4u.models.dto.forum.PostManageDTO;
 import vn.wellcare4u.models.response.TrendsResponseDTO;
 import vn.wellcare4u.services.AdminReportService;
 import vn.wellcare4u.services.AdminService;
@@ -66,16 +66,16 @@ public class AdminAPI {
 	}
 	
 	@GetMapping("/posts")
-	public ApiResponse<Page<PostSummaryDTO>> getAllPosts(@RequestParam(defaultValue = "0") int page,
+	public ApiResponse<Page<PostManageDTO>> getAllPosts(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size, 
 			@RequestParam(required = false) EForumCategory category,
 			@RequestParam(required = false) ESpecialization specialization,
 			@RequestParam(required = false) String keyword, 
 			@RequestParam(defaultValue = "NEWEST") EPostSortType sort) {
-		return ApiResponse.<Page<PostSummaryDTO>>builder()
+		return ApiResponse.<Page<PostManageDTO>>builder()
 				.status(200)
 				.message("Get posts successfully")
-				.data(forumServ.getAllPosts(page, size, category, specialization, keyword, sort))
+				.data(forumServ.getAllPostsManage(page, size, category, specialization, keyword, sort))
 				.build();
 	}
 	

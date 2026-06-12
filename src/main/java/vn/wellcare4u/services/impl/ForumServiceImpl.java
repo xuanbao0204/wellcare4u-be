@@ -182,6 +182,39 @@ public class ForumServiceImpl implements ForumService {
 	}
 	
 	@Override
+	public Page<PostManageDTO> getAllPostsManage(int page, int size, EForumCategory category, ESpecialization specialization,
+			String keyword, EPostSortType sort) {
+
+		Sort sorting = switch (sort) {
+		case MOST_LIKED -> Sort.by("likes").descending();
+		case MOST_VIEWED -> Sort.by("viewCount").descending();
+		case MOST_COMMENTED -> Sort.by("commentCount").descending();
+		default -> Sort.by("createdAt").descending(); // NEWEST
+		};
+
+		Pageable pageable = PageRequest.of(page, size, sorting);
+
+		Page<ForumPost> posts;
+		if (keyword != null && !keyword.isBlank()) {
+
+			posts = postRepo.searchWithFilter(keyword, category, specialization, pageable);
+
+		} else {
+
+			posts = postRepo.filterPosts(category, specialization, pageable);
+		}
+
+		return posts.map(post -> {
+	        PostManageDTO dto = mapper.toPostManage(post);
+
+	        ModerationResultDTO check = modServ.getViolation(post);
+	        dto.setModerationResult(check);
+
+	        return dto;
+	    });
+	}
+	
+	@Override
 	public Page<PostManageDTO> getAllPostsByUserId(int page, int size, EForumCategory category, ESpecialization specialization,
 			String keyword, EPostSortType sort, Long userId) {
 

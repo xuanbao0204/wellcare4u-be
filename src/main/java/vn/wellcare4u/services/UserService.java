@@ -1,5 +1,7 @@
 package vn.wellcare4u.services;
 
+import java.util.Map;
+
 import vn.wellcare4u.entities.User;
 import vn.wellcare4u.models.dto.UserDTO;
 import vn.wellcare4u.models.request.UserInfoRequest;
@@ -15,5 +17,7 @@ public interface UserService {
 	Long getIdFromEmail(String email);
 
 	UserDTO convertToDTO(User user);
+
+	Map<Long, String> getUserIds();
 
 }

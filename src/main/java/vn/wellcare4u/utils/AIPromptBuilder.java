@@ -110,7 +110,7 @@ public class AIPromptBuilder {
 				Đã hủy: %d
 				Đang chờ: %d
 
-				""", doctor.getSpecialization().getDisplayName(), doctor.getExperienceYears(), appointments.size(),
+				""", doctor.getSpecialization() != null ? doctor.getSpecialization().getDisplayName() : "Chưa cập nhật", doctor.getExperienceYears(), appointments.size(),
 				completed, cancelled, pending));
 
 		sb.append("=== MEDICAL RECORDS ===\n");

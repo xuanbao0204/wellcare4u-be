@@ -1,10 +1,14 @@
 package vn.wellcare4u.services.impl;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import vn.wellcare4u.entities.User;
+import vn.wellcare4u.enums.ERole;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.models.dto.ProfileCompletionResult;
 import vn.wellcare4u.models.dto.UserDTO;
@@ -96,5 +100,16 @@ public class UserServiceImpl implements UserService{
 		User u = userRepo.findByAccount_Email(email).orElseThrow(() -> new AppException("Không tìm thấy profile tích hợp", "PROFILE_NOT_FOUND", HttpStatus.NOT_FOUND));
 		System.out.println("User from service: " + u.getId());
 		return u.getId();
+	}
+	
+	@Override
+	public Map<Long, String> getUserIds() {
+	    return userRepo.findAllExcept(ERole.ADMIN)
+	            .stream()
+	            .collect(Collectors.toMap(
+	                    r -> r.getId(),
+	                    r -> r.getFullName(),
+	                    (existing, replacement) -> existing
+	            ));
 	}
 }

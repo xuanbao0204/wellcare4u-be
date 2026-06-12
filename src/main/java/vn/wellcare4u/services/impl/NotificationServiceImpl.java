@@ -101,6 +101,13 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	@Override
+	public List<NotificationDTO> getNotificationsBySender(String email) {
+		User user = findUserByEmail(email);
+		return notificationRepo.findBySender_IdOrderByCreatedAtDesc(user.getId()).stream().map(this::mapToDTO).toList();
+	}
+
+	
+	@Override
 	public long countUnread(String email) {
 		User user = findUserByEmail(email);
 		return recipientRepo.countUnread(user.getId());
@@ -139,6 +146,18 @@ public class NotificationServiceImpl implements NotificationService {
 	            .referenceId(n.getReferenceId())
 	            .createdAt(n.getCreatedAt())
 	            .build();
+	}
+	
+	private NotificationDTO mapToDTO(Notification n) {
+	    return NotificationDTO.builder()
+	    		.id(n.getId())
+	    		.notificationId(n.getId())
+				.title(n.getTitle())
+				.content(n.getContent())
+				.type(n.getType())
+				.referenceId(n.getReferenceId())
+				.createdAt(n.getCreatedAt())
+				.build();
 	}
 	
 	@Override

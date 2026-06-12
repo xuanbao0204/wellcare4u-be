@@ -25,6 +25,7 @@ import vn.wellcare4u.enums.EAppointmentType;
 import vn.wellcare4u.enums.ECancelBy;
 import vn.wellcare4u.enums.ETimeSlotStatus;
 import vn.wellcare4u.events.AppointmentEvent;
+import vn.wellcare4u.events.DoctorDashboardChangedEvent;
 import vn.wellcare4u.exception.AppException;
 import vn.wellcare4u.models.dto.AppointmentDTO;
 import vn.wellcare4u.models.request.AppointmentRequest;
@@ -135,6 +136,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 		                req.getReason()
 		        )
 		);
+		publisher.publishEvent(
+                new DoctorDashboardChangedEvent(
+                        apt.getDoctor().getId()
+                )
+        );
 		
 	}
 
@@ -181,7 +187,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 		timeSlotRepo.save(slot);
 
 		publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.BOOKED, appt, "PATIENT", null));
-		
+		publisher.publishEvent(new DoctorDashboardChangedEvent(slot.getDoctor().getId()));
 		return mapToDTO(appt);
 	}
 	
@@ -213,6 +219,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 		appointmentRepo.save(appt);
 
 		publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.REBOOK, appt, "DOCTOR", null));
+		publisher.publishEvent(
+                new DoctorDashboardChangedEvent(
+                        slot.getDoctor().getId()
+                )
+        );
 		
 		return mapToDTO(appt);
 	}
@@ -278,6 +289,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 	    appointmentRepo.save(apt);
 
 	    publisher.publishEvent(new AppointmentEvent(EAppointmentEventType.COMPLETED, apt, "DOCTOR", null));
+	    publisher.publishEvent(
+                new DoctorDashboardChangedEvent(
+                        apt.getDoctor().getId()
+                )
+        );
 		
 	}
 

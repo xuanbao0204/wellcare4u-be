@@ -90,4 +90,13 @@ public class MedicalRecordAPI {
 	            .data(medicalRecordServ.getRecordDetail(recordId))
 	            .build();
 	}
+	
+	@GetMapping("/detail/print/{recordId}")
+	public ApiResponse<?> getRecordDetailPrint(@PathVariable Long recordId) {
+	    return ApiResponse.builder()
+	            .status(HttpStatus.OK.value())
+	            .message("Lấy chi tiết phiếu khám thành công")
+	            .data(medicalRecordServ.getRecordDetailPrint(recordId))
+	            .build();
+	}
 }

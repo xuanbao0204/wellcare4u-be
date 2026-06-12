@@ -1,5 +1,7 @@
 package vn.wellcare4u.controllers.admin;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,7 @@ import vn.wellcare4u.enums.ERole;
 import vn.wellcare4u.models.ApiResponse;
 import vn.wellcare4u.models.request.NotificationRequest;
 import vn.wellcare4u.services.NotificationService;
+import vn.wellcare4u.services.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin/notifications")
@@ -24,6 +27,7 @@ import vn.wellcare4u.services.NotificationService;
 public class AdminNotificationAPI {
 
     private final NotificationService notificationService;
+    private final UserService uServ;
 
     @PostMapping("/send")
     @PreAuthorize("hasRole('ADMIN')")
@@ -35,6 +39,24 @@ public class AdminNotificationAPI {
 
         return ApiResponse.<Void>builder()
                 .status(HttpStatus.OK.value())
+                .message("Gửi thông báo thành công")
+                .build();
+    }
+    
+    @PostMapping("/get-recipients")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Map<Long, String>> getRecipients(Authentication auth) {
+    	
+    	if (auth == null || !auth.isAuthenticated()) {
+    		return  ApiResponse.<Map<Long, String>>builder()
+                    .status(401)
+                    .message("Not authorized")
+                    .build();
+    	}
+    	
+        return ApiResponse.<Map<Long, String>>builder()
+                .status(HttpStatus.OK.value())
+                .data(uServ.getUserIds())
                 .message("Gửi thông báo thành công")
                 .build();
     }

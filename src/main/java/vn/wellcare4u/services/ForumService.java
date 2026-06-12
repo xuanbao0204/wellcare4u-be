@@ -34,4 +34,6 @@ public interface ForumService {
 	Page<PostManageDTO> getAllPostsByUserId(int page, int size, EForumCategory category, ESpecialization specialization, String keyword, EPostSortType sort,
 			Long userId);
 
+	Page<PostManageDTO> getAllPostsManage(int page, int size, EForumCategory category, ESpecialization specialization, String keyword, EPostSortType sort);
+
 }

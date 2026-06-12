@@ -47,44 +47,13 @@ public class NotificationAPI {
                 .message("Đánh dấu đã đọc thành công")
                 .build();
     }
+    
+    @GetMapping("/by-sender")
+    public ApiResponse<List<NotificationDTO>> getMyNotificationsBySender(Principal principal) {
+        return ApiResponse.<List<NotificationDTO>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Lấy danh sách thông báo thành công")
+                .data(notificationService.getNotificationsBySender(principal.getName()))
+                .build();
+    }
 }
-
-//@RestController
-//@RequestMapping("/api/v1/notifications")
-//@RequiredArgsConstructor
-//public class NotificationAPI {
-//
-//    private final NotificationService notificationService;
-//
-//    @GetMapping
-//    public ApiResponse<List<NotificationDTO>> getMyNotifications(Principal principal) {
-//        List<NotificationDTO> data = notificationService.getMyNotifications(principal.getName());
-//
-//        return ApiResponse.<List<NotificationDTO>>builder()
-//                .status(HttpStatus.OK.value())
-//                .message("Lấy danh sách thông báo thành công")
-//                .data(data)
-//                .build();
-//    }
-//
-//    @GetMapping("/unread-count")
-//    public ApiResponse<Long> countUnread(Principal principal) {
-//        long count = notificationService.countUnread(principal.getName());
-//
-//        return ApiResponse.<Long>builder()
-//                .status(HttpStatus.OK.value())
-//                .message("Lấy số thông báo chưa đọc thành công")
-//                .data(count)
-//                .build();
-//    }
-//
-//    @PostMapping("/{id}/read")
-//    public ApiResponse<Void> markAsRead(@PathVariable Long id, Principal principal) {
-//        notificationService.markAsRead(id, principal.getName());
-//
-//        return ApiResponse.<Void>builder()
-//                .status(HttpStatus.OK.value())
-//                .message("Đánh dấu đã đọc thành công")
-//                .build();
-//    }
-//}

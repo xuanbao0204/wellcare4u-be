@@ -174,6 +174,16 @@ public class DoctorServiceImpl implements DoctorService{
 	    }
 	}
 	
+	public boolean isProfessionalProfileCompleted(String email) {
+		Doctor d = doctorRepo.findByAccount_Email(email)
+                .orElseThrow(() -> new AppException(
+                        "Doctor not found",
+                        "DOCTOR_NOT_FOUND",
+                        HttpStatus.NOT_FOUND
+                ));
+		return d.getCertification() != null && d.getSpecialization() != null && d.getClinicAddress() != null;
+	}
+	
 	private DoctorDTO convertToFullDTO(Doctor doctor) {
 		
 		UserDTO u = uServ.getUserInfoByEmail(doctor.getAccount().getEmail());

@@ -24,6 +24,8 @@ public interface NotificationService {
 
 	void send(NotificationRequest req);
 
+	List<NotificationDTO> getNotificationsBySender(String email);
+
 //	void markAsRead(Long id, String email);
 //
 //	long countUnread(String email);
